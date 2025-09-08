@@ -1,0 +1,47 @@
+<h2>Sign up</h2>
+
+<%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+  <%= render "devise/shared/error_messages", resource: resource %>
+
+  <div class="field">
+    <%= f.label :name %><br />
+    <%= f.text_field :name, autofocus: true, autocomplete: "name" %>
+  </div>
+
+  <div class="field">
+    <%= f.label :email %><br />
+    <%= f.email_field :email, autocomplete: "email" %>
+  </div>
+
+  <div class="field">
+    <%= f.label :password %>
+    <% if @minimum_password_length %>
+    <em>(<%= @minimum_password_length %> characters minimum)</em>
+    <% end %><br />
+    <%= f.password_field :password, autocomplete: "new-password" %>
+    <div class="password-requirements">
+      <small>
+        <strong>Password must contain:</strong><br>
+        • At least 8 characters<br>
+        • One uppercase letter<br>
+        • One lowercase letter<br>
+        • One number<br>
+        • One special character (!@#$%^&* etc.)<br>
+        • No common passwords like "password" or "123456"<br>
+        • No sequential characters like "1234" or "abcd"<br>
+        • No more than 3 consecutive identical characters
+      </small>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :password_confirmation %><br />
+    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Sign up" %>
+  </div>
+<% end %>
+
+<%= render "devise/shared/links" %>

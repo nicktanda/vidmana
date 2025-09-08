@@ -1,0 +1,24 @@
+<h1>Welcome to Vidmana</h1>
+
+<% if user_signed_in? %>
+  <p>Hello <%= current_user.name %>! You're successfully logged in.</p>
+  <p>Your email: <%= current_user.email %></p>
+  
+  <h2>Your Stories</h2>
+  <% if current_user.stories.any? %>
+    <ul>
+      <% current_user.stories.each do |story| %>
+        <li>
+          <strong><%= story.title %></strong>
+          <% if story.description.present? %>
+            - <%= story.description %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>You haven't created any stories yet.</p>
+  <% end %>
+<% else %>
+  <p>Please <%= link_to "sign in", new_user_session_path %> or <%= link_to "sign up", new_user_registration_path %> to get started.</p>
+<% end %>
