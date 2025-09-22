@@ -49,6 +49,18 @@ Rails.application.configure do
   # Highlight code that triggered database queries in logs.
   config.active_record.verbose_query_logs = true
 
+  # Debug mode disables concatenation and preprocessing of assets.
+  config.assets.debug = true
+
+  # Suppress logger output for asset requests.
+  config.assets.quiet = true
+
+  # Do not fallback to assets pipeline if a precompiled asset is missed.
+  config.assets.compile = true
+
+  # Do not require assets to be precompiled in development
+  config.assets.check_precompiled_asset = false
+
   # Append comments with runtime information tags to SQL queries in logs.
   config.active_record.query_log_tags_enabled = true
 

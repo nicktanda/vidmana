@@ -1,7 +1,8 @@
 FactoryBot.define do
   factory :beat do
-    title { Faker::Book.title }
-    description { Faker::Lorem.paragraph(sentence_count: 5) }
-    association :story
+    story { nil }
+    title { "MyString" }
+    description { "MyText" }
+    order_index { 1 }
   end
 end

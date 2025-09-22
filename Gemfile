@@ -52,11 +52,14 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
-  
+
   # RSpec for testing
   gem "rspec-rails", "~> 7.0"
   gem "factory_bot_rails"
   gem "faker"
+
+  # Load environment variables from .env file
+  gem "dotenv-rails"
 end
 
 group :development do
@@ -71,3 +74,7 @@ group :test do
   gem "shoulda-matchers", "~> 6.0"
   gem "database_cleaner-active_record"
 end
+
+gem "tailwindcss-rails", "~> 4.3"
+
+gem "httparty", "~> 0.23.1"

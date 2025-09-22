@@ -1,7 +1,10 @@
 FactoryBot.define do
   factory :story do
-    title { Faker::Book.unique.title }
-    description { Faker::Lorem.paragraph(sentence_count: 3) }
-    association :user
+    title { "MyString" }
+    description { "MyText" }
+    user { nil }
+    prompt { "MyText" }
+    api_response { "" }
+    status { "MyString" }
   end
 end

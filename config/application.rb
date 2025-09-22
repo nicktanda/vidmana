@@ -26,5 +26,8 @@ module Vidmana
     
     # Use structure.sql instead of schema.rb
     config.active_record.schema_format = :sql
+
+    # Configure Propshaft to include Tailwind builds
+    config.assets.paths << Rails.root.join("app/assets/builds")
   end
 end

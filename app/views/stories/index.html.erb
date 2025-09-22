@@ -1,0 +1,41 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold">My Stories</h1>
+    <%= link_to "New Story", new_story_path, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+  </div>
+
+  <% if @stories.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @stories.each do |story| %>
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+          <h2 class="text-xl font-semibold mb-2">
+            <%= link_to story.title, story, class: "text-blue-600 hover:text-blue-800" %>
+          </h2>
+          <p class="text-gray-600 mb-4 line-clamp-3">
+            <%= story.description %>
+          </p>
+          <div class="flex justify-between items-center text-sm text-gray-500">
+            <span><%= story.created_at.strftime("%B %d, %Y") %></span>
+            <span class="px-2 py-1 rounded bg-green-100 text-green-800">
+              <% if story.beats.any? %>
+                <%= pluralize(story.beats.count, 'beat') %>
+              <% else %>
+                New
+              <% end %>
+            </span>
+          </div>
+          <div class="mt-4 flex gap-2">
+            <%= link_to "View", story, class: "text-blue-500 hover:text-blue-700" %>
+            <%= link_to "Edit", edit_story_path(story), class: "text-green-500 hover:text-green-700" %>
+            <%= link_to "Delete", story, data: { turbo_method: :delete, turbo_confirm: "Are you sure?" }, class: "text-red-500 hover:text-red-700" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-12">
+      <p class="text-gray-500 mb-4">You haven't created any stories yet.</p>
+      <%= link_to "Create your first story", new_story_path, class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" %>
+    </div>
+  <% end %>
+</div>

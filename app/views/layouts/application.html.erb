@@ -18,7 +18,10 @@
     <link rel="apple-touch-icon" href="/icon.png">
 
     <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <style>
+      <%= File.read(Rails.root.join('app/assets/stylesheets/tailwind.css')).html_safe %>
+    </style>
     <%= javascript_importmap_tags %>
   </head>
 
@@ -28,6 +31,7 @@
         <% if user_signed_in? %>
           <span>Welcome, <%= current_user.name %>!</span>
           <%= link_to "Home", root_path %>
+          <%= link_to "Stories", stories_path %>
           <%= link_to "Edit Profile", edit_user_registration_path %>
           <%= button_to "Logout", destroy_user_session_path, method: :delete, data: { turbo: false } %>
         <% else %>
@@ -45,7 +49,7 @@
       <p class="alert"><%= alert %></p>
     <% end %>
 
-    <main>
+    <main class="tailwindcss">
       <%= yield %>
     </main>
   </body>

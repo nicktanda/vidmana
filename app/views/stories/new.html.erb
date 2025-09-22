@@ -1,0 +1,325 @@
+<div class="min-h-screen bg-gray-50 flex">
+  <!-- Sidebar -->
+  <div class="w-64 bg-gray-900 text-white p-4 hidden lg:block">
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">Story Generator</h2>
+      <%= link_to "← Back to Stories", stories_path, class: "text-gray-400 hover:text-white text-sm transition-colors" %>
+    </div>
+
+    <button class="w-full bg-gray-800 hover:bg-gray-700 rounded-lg p-3 text-left transition-colors mb-4">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        <span>New Story</span>
+      </div>
+    </button>
+
+    <div class="border-t border-gray-800 pt-4">
+      <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent Stories</h3>
+      <div class="space-y-2 text-sm">
+        <p class="text-gray-500 italic">Your recent stories will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col bg-white">
+    <!-- Chat Header -->
+    <div class="border-b border-gray-200 px-6 py-4">
+      <h1 class="text-xl font-semibold">Story Generator</h1>
+      <p class="text-sm text-gray-500">Describe your story idea and I'll create characters, locations, and beats</p>
+    </div>
+
+    <!-- Messages Area -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto">
+      <div class="max-w-3xl mx-auto px-4 py-8">
+        <!-- Assistant Welcome Message -->
+        <% unless @user_prompt %>
+          <div class="flex gap-4 mb-6">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-purple-600 rounded-sm flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0710 16z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <p class="text-gray-800 leading-relaxed">
+                Hello! I'm here to help you create an amazing story. Describe your story idea with as much detail as you'd like - genre, setting, main characters, themes, or plot points. I'll generate a complete story structure including characters, locations, and narrative beats.
+              </p>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Show conversation if there's a response -->
+        <% if @user_prompt && @api_response %>
+          <!-- User Message -->
+          <div class="flex gap-4 mb-6">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-gray-600 rounded-sm flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <p class="text-gray-800 leading-relaxed"><%= @user_prompt %></p>
+            </div>
+          </div>
+
+          <!-- Assistant Response -->
+          <div class="flex gap-4 mb-6">
+            <div class="flex-shrink-0">
+              <div class="w-8 h-8 bg-purple-600 rounded-sm flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0710 16z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1 space-y-4">
+              <p class="text-gray-800 leading-relaxed">
+                I've created a comprehensive cinematic story structure for you! Here's what I've generated:
+              </p>
+
+              <!-- Story Title and Description -->
+              <div class="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                <h3 class="text-xl font-bold text-gray-900 mb-2"><%= @api_response['title'] %></h3>
+                <p class="text-gray-700"><%= @api_response['description'] %></p>
+              </div>
+
+              <!-- Characters Section -->
+              <% if @api_response['characters'].present? %>
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                    Characters
+                  </h4>
+                  <div class="space-y-2">
+                    <% @api_response['characters'].each do |character| %>
+                      <div class="pl-6 border-l-2 border-purple-200">
+                        <p class="font-medium text-gray-900">
+                          <%= character['name'] %>
+                          <span class="text-xs text-purple-600 ml-2">(<%= character['role'] %>)</span>
+                        </p>
+                        <p class="text-sm text-gray-600"><%= character['description'] %></p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Locations Section -->
+              <% if @api_response['locations'].present? %>
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                    </svg>
+                    Locations
+                  </h4>
+                  <div class="space-y-2">
+                    <% @api_response['locations'].each do |location| %>
+                      <div class="pl-6 border-l-2 border-blue-200">
+                        <p class="font-medium text-gray-900">
+                          <%= location['name'] %>
+                          <span class="text-xs text-blue-600 ml-2">(<%= location['location_type'] %>)</span>
+                        </p>
+                        <p class="text-sm text-gray-600"><%= location['description'] %></p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Story Beats Section -->
+              <% if @api_response['beats'].present? %>
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9.5H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Story Beats
+                  </h4>
+                  <div class="space-y-3">
+                    <% @api_response['beats'].sort_by { |b| b['order_index'] || 0 }.each_with_index do |beat, index| %>
+                      <div class="flex gap-3">
+                        <div class="flex-shrink-0">
+                          <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-semibold text-green-700"><%= index + 1 %></span>
+                          </div>
+                        </div>
+                        <div class="flex-1">
+                          <p class="font-medium text-gray-900"><%= beat['title'] %></p>
+                          <p class="text-sm text-gray-600 mt-1"><%= beat['description'] %></p>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Action Buttons -->
+              <div class="flex justify-end gap-3 pt-4">
+                <%= link_to "Start New Story", new_story_path, class: "px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors inline-block text-center" %>
+                <%= form_with url: stories_path, local: true, class: "inline-block" do |form| %>
+                  <%= form.hidden_field :title, value: @api_response['title'] %>
+                  <%= form.hidden_field :description, value: @api_response['description'] %>
+                  <%= form.hidden_field :full_data, value: @api_response.to_json %>
+                  <%= form.hidden_field :save_story, value: true %>
+                  <%= form.submit "Save This Story", class: "px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="border-t border-gray-200 px-4 py-4">
+      <div class="max-w-3xl mx-auto">
+        <%= form_with(model: @story, local: true, id: "story-form", data: { turbo: false }) do |form| %>
+          <div class="relative">
+            <textarea
+              name="story[prompt]"
+              id="user-prompt"
+              placeholder="Describe your story idea..."
+              class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent"
+              rows="3"
+              style="max-height: 200px;"></textarea>
+
+            <button
+              type="submit"
+              id="send-prompt"
+              class="absolute bottom-3 right-3 bg-purple-600 hover:bg-purple-700 text-white rounded-md p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+              </svg>
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Press Enter to generate your story, Shift+Enter for new line</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  <%= File.read(Rails.root.join('app/assets/stylesheets/tailwind.css')).html_safe %>
+
+  #user-prompt:focus {
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+  }
+
+  .message-fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  .typing-indicator span {
+    animation: pulse 1.4s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const chatMessages = document.getElementById('chat-messages').querySelector('.max-w-3xl');
+  const userPrompt = document.getElementById('user-prompt');
+  const sendButton = document.getElementById('send-prompt');
+  const storyForm = document.getElementById('story-form');
+
+  // Auto-resize textarea
+  userPrompt.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+  });
+
+  // Handle Enter key
+  userPrompt.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      storyForm.submit();
+    }
+  });
+
+  function addMessage(text, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'flex gap-4 mb-6 message-fade-in';
+
+    if (sender === 'user') {
+      messageDiv.innerHTML = `
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-gray-600 rounded-sm flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+        </div>
+        <div class="flex-1">
+          <p class="text-gray-800 leading-relaxed">${text}</p>
+        </div>
+      `;
+    } else {
+      messageDiv.innerHTML = `
+        <div class="flex-shrink-0">
+          <div class="w-8 h-8 bg-purple-600 rounded-sm flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0710 16z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="flex-1">
+          <div class="text-gray-800 leading-relaxed">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+        </div>
+      `;
+    }
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.parentElement.scrollTop = chatMessages.parentElement.scrollHeight;
+  }
+
+  function showTypingIndicator() {
+    const indicator = document.createElement('div');
+    indicator.id = 'typing-indicator';
+    indicator.className = 'flex gap-4 mb-6';
+    indicator.innerHTML = `
+      <div class="flex-shrink-0">
+        <div class="w-8 h-8 bg-purple-600 rounded-sm flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0710 16z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="flex-1">
+        <div class="typing-indicator flex gap-1 items-center">
+          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+          <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(indicator);
+    chatMessages.parentElement.scrollTop = chatMessages.parentElement.scrollHeight;
+  }
+});
+</script>

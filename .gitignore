@@ -35,3 +35,6 @@
 
 # Ignore schema.rb since we're using structure.sql
 /db/schema.rb
+
+/app/assets/builds/*
+!/app/assets/builds/.keep

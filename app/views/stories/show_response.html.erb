@@ -1,0 +1,31 @@
+<div class="min-h-screen bg-gray-50 p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-sm border p-6">
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Story Generated!</h1>
+        <p class="text-gray-600">Here's the response from OpenRouter AI:</p>
+      </div>
+
+      <div class="mb-6 p-4 bg-gray-100 rounded-lg">
+        <h3 class="font-semibold text-gray-700 mb-2">Your Prompt:</h3>
+        <p class="text-gray-800"><%= @prompt %></p>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="font-semibold text-gray-700 mb-4">API Response:</h3>
+        <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+          <pre><%= JSON.pretty_generate(@api_response) %></pre>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <%= link_to "Generate Another Story", new_story_path, class: "bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors" %>
+        <%= link_to "Back to Stories", stories_path, class: "bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors" %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  <%= File.read(Rails.root.join('app/assets/stylesheets/tailwind.css')).html_safe %>
+</style>

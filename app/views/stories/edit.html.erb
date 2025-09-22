@@ -1,0 +1,224 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="bg-white rounded-lg shadow-lg p-8">
+    <h1 class="text-3xl font-bold mb-6">Edit Story</h1>
+
+    <%= form_with(model: @story, local: true) do |form| %>
+      <% if @story.errors.any? %>
+        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+          <h3 class="text-red-800 font-semibold">Please correct the following errors:</h3>
+          <ul class="list-disc list-inside text-red-600 text-sm mt-2">
+            <% @story.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Basic Story Info -->
+      <div class="mb-6">
+        <%= form.label :title, class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.text_field :title, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+
+      <div class="mb-6">
+        <%= form.label :description, class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.text_area :description, rows: 4, class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+      </div>
+
+      <!-- Characters Section -->
+      <div class="mb-8">
+        <h3 class="text-lg font-semibold mb-3 text-gray-800">Characters</h3>
+        <div id="characters" class="space-y-3">
+          <%= form.fields_for :characters do |character_form| %>
+            <div class="character-fields p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <%= character_form.label :name, "Name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                  <%= character_form.text_field :name, class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500" %>
+                </div>
+                <div>
+                  <%= character_form.label :role, "Role", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                  <%= character_form.select :role, ['protagonist', 'antagonist', 'supporting'], { include_blank: false },
+                      class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500" %>
+                </div>
+              </div>
+              <div class="mt-3">
+                <%= character_form.label :description, "Description", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                <%= character_form.text_area :description, rows: 2, class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500" %>
+              </div>
+              <div class="mt-3 flex justify-end">
+                <%= character_form.check_box :_destroy, class: "mr-2" %>
+                <%= character_form.label :_destroy, "Remove this character", class: "text-sm text-red-600" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="mt-3">
+          <button type="button" onclick="addCharacter()" class="text-sm text-purple-600 hover:text-purple-800">+ Add Character</button>
+        </div>
+      </div>
+
+      <!-- Locations Section -->
+      <div class="mb-8">
+        <h3 class="text-lg font-semibold mb-3 text-gray-800">Locations</h3>
+        <div id="locations" class="space-y-3">
+          <%= form.fields_for :locations do |location_form| %>
+            <div class="location-fields p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <%= location_form.label :name, "Name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                  <%= location_form.text_field :name, class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+                </div>
+                <div>
+                  <%= location_form.label :location_type, "Type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                  <%= location_form.select :location_type, ['setting', 'landmark', 'building', 'natural', 'magical'], { include_blank: false },
+                      class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+                </div>
+              </div>
+              <div class="mt-3">
+                <%= location_form.label :description, "Description", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                <%= location_form.text_area :description, rows: 2, class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+              </div>
+              <div class="mt-3 flex justify-end">
+                <%= location_form.check_box :_destroy, class: "mr-2" %>
+                <%= location_form.label :_destroy, "Remove this location", class: "text-sm text-red-600" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="mt-3">
+          <button type="button" onclick="addLocation()" class="text-sm text-blue-600 hover:text-blue-800">+ Add Location</button>
+        </div>
+      </div>
+
+      <!-- Story Beats Section -->
+      <div class="mb-8">
+        <h3 class="text-lg font-semibold mb-3 text-gray-800">Story Beats</h3>
+        <div id="beats" class="space-y-3">
+          <%= form.fields_for :beats, @story.beats.order(:order_index) do |beat_form| %>
+            <div class="beat-fields flex gap-3">
+              <div class="flex-shrink-0 mt-4">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <span class="text-sm font-bold text-white beat-number"><%= beat_form.index + 1 %></span>
+                </div>
+              </div>
+              <div class="flex-1 p-4 bg-green-50 rounded-lg border border-green-200">
+                <%= beat_form.hidden_field :order_index, value: beat_form.index, class: "beat-order" %>
+                <div>
+                  <%= beat_form.label :title, "Title", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                  <%= beat_form.text_field :title, class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" %>
+                </div>
+                <div class="mt-3">
+                  <%= beat_form.label :description, "Description", class: "block text-sm font-medium text-gray-700 mb-1" %>
+                  <%= beat_form.text_area :description, rows: 2, class: "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" %>
+                </div>
+                <div class="mt-3 flex justify-end">
+                  <%= beat_form.check_box :_destroy, class: "mr-2" %>
+                  <%= beat_form.label :_destroy, "Remove this beat", class: "text-sm text-red-600" %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        <div class="mt-3">
+          <button type="button" onclick="addBeat()" class="text-sm text-green-600 hover:text-green-800">+ Add Beat</button>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <%= form.submit "Update Story", class: "flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors cursor-pointer" %>
+        <%= link_to "Cancel", @story, class: "px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  let characterIndex = <%= @story.characters.count %>;
+  let locationIndex = <%= @story.locations.count %>;
+  let beatIndex = <%= @story.beats.count %>;
+
+  function addCharacter() {
+    const container = document.getElementById('characters');
+    const html = `
+      <div class="character-fields p-4 bg-purple-50 rounded-lg border border-purple-200">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" name="story[characters_attributes][${characterIndex}][name]" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select name="story[characters_attributes][${characterIndex}][role]" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500">
+              <option value="protagonist">protagonist</option>
+              <option value="antagonist">antagonist</option>
+              <option value="supporting">supporting</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea name="story[characters_attributes][${characterIndex}][description]" rows="2" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    characterIndex++;
+  }
+
+  function addLocation() {
+    const container = document.getElementById('locations');
+    const html = `
+      <div class="location-fields p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" name="story[locations_attributes][${locationIndex}][name]" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select name="story[locations_attributes][${locationIndex}][location_type]" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="setting">setting</option>
+              <option value="landmark">landmark</option>
+              <option value="building">building</option>
+              <option value="natural">natural</option>
+              <option value="magical">magical</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea name="story[locations_attributes][${locationIndex}][description]" rows="2" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    locationIndex++;
+  }
+
+  function addBeat() {
+    const container = document.getElementById('beats');
+    const html = `
+      <div class="beat-fields flex gap-3">
+        <div class="flex-shrink-0 mt-4">
+          <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+            <span class="text-sm font-bold text-white beat-number">${beatIndex + 1}</span>
+          </div>
+        </div>
+        <div class="flex-1 p-4 bg-green-50 rounded-lg border border-green-200">
+          <input type="hidden" name="story[beats_attributes][${beatIndex}][order_index]" value="${beatIndex}" class="beat-order" />
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input type="text" name="story[beats_attributes][${beatIndex}][title]" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500" />
+          </div>
+          <div class="mt-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea name="story[beats_attributes][${beatIndex}][description]" rows="2" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+          </div>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    beatIndex++;
+  }
+</script>

@@ -1,7 +1,8 @@
 FactoryBot.define do
   factory :location do
-    name { Faker::Address.city }
-    description { Faker::Lorem.paragraph(sentence_count: 2) }
-    association :story
+    story { nil }
+    name { "MyString" }
+    description { "MyText" }
+    location_type { "MyString" }
   end
 end
