@@ -31,7 +31,8 @@ class StoriesController < ApplicationController
     if params[:save_story] == 'true'
       @story = current_user.stories.build(
         title: params[:title],
-        description: params[:description]
+        description: params[:description],
+        prompt: params[:prompt]
       )
 
       if @story.save
@@ -124,7 +125,7 @@ class StoriesController < ApplicationController
   end
 
   def story_params
-    params.require(:story).permit(:title, :description,
+    params.require(:story).permit(:title, :description, :prompt,
       characters_attributes: [:id, :name, :description, :role, :_destroy],
       locations_attributes: [:id, :name, :description, :location_type, :_destroy],
       beats_attributes: [:id, :title, :description, :order_index, :_destroy])
@@ -140,13 +141,15 @@ class StoriesController < ApplicationController
 
       The text above is USER PROMPT.
       AI INSTRUCTIONS:
-      Your task is to expand the USER PROMPT into a continuous story with 4 detailed beats. Ensure that you are consistent amongst each beat as each beat is independent of each other, has a 2000 character limit, and you must do the job of linking them by repeating descriptions of Characters, Locations, and Objects exactly the same in between the beats of the same story. Maintain consistent characters, objects, and locations across all beats to create a unified cinematic feel. For example if the [USER PROMPT] is "Daniel goes to get some water in a truck", you can identify at minimum one character, Daniel, that becomes [CHARACTER 01], you can identify a location, although it is not clear, so you make one up that is appropriate and has water and it becomes [LOCATION 01], and then we have a minimum of one object, the truck, which becomes [OBJECT 01]. If there are multiple characters, locations and objects, you can add as appropriate, under the grouping headers of [CHARACTER DEFINITIONS], [LOCATION DEFINITIONS], [OBJECT DEFINITIONS]. For the beats, understand the USER PROMPT, and make an action sequence across 4 beats utilizing the appropriate recall tag. For example if Beat 1 uses Daniel and truck, then recall under the [CHARACTER DEFINITIONS] and [OBJECT DEFINITIONS] the description and use it exactly the same across the 4 beats (unless there's a reason to change that state).
+      Your task is to expand the USER PROMPT into a continuous story with 4 detailed beats. Each beat must be long-form—target 1,950 to 2,000 characters per beat—and under no circumstances end a beat below 1,900 characters. Expand with sensory detail, character thoughts, environmental texture, and narrative continuity so the length requirement is satisfied while keeping the story coherent. Ensure that you are consistent amongst each beat as each beat is independent of each other, and you must do the job of linking them by repeating descriptions of Characters, Locations, and Objects exactly the same in between the beats of the same story. Maintain consistent characters, objects, and locations across all beats to create a unified cinematic feel. For example if the [USER PROMPT] is "Daniel goes to get some water in a truck", you can identify at minimum one character, Daniel, that becomes [CHARACTER 01], you can identify a location, although it is not clear, so you make one up that is appropriate and has water and it becomes [LOCATION 01], and then we have a minimum of one object, the truck, which becomes [OBJECT 01]. If there are multiple characters, locations and objects, you can add as appropriate, under the grouping headers of [CHARACTER DEFINITIONS], [LOCATION DEFINITIONS], [OBJECT DEFINITIONS]. For the beats, understand the USER PROMPT, and make an action sequence across 4 beats utilizing the appropriate recall tag. For example if Beat 1 uses Daniel and truck, then recall under the [CHARACTER DEFINITIONS] and [OBJECT DEFINITIONS] the description and use it exactly the same across the 4 beats (unless there's a reason to change that state).
 
       First understand what the user prompt is asking. Is it about someone? Is it about something? Is it about a location? Is it about an animal? Consider the purpose of the user prompt and see how you can visualize their text in 4 beats, with instructions on how to proceed below.
 
       Then assess the user prompt to identify characters, objects, locations, and fill in the [CHARACTER DEFINITIONS], [OBJECT DEFINITIONS], [LOCATION DEFINITIONS]. These will be headers that I will parse out the content in between them to various locations. You are now ready to generate the beats. Note if the user prompt could contain action scenes between humans, non-humans, animals, etc. These can all be [CHARACTER DEFINITIONS], so an alien or an animal would be described as a character. If the user prompt does not have a character, then perhaps it has an object or a location. Then therefore do not fill in a character, and focus the four beats on a cinematic shot of an object or a location. Often the user may have multiple characters, objects and locations. For example only: "The black haired woman in a wedding dress is pushed out of the door by another woman in a black dress. The woman in the wedding dress is caught by ravens as the plane explodes". Here we have multiple characters, the woman in white wedding dress, the woman in black wedding dress, and the ravens. We also have the location, sky and air; and we have the objects, plane, interior of plane. In this example, you would then use the four beats you have to visualize this dramatic scene, while retaining the same characters location and object definitions throughout each beat.
 
       Each beat that you generate needs to be processed independently by a video generator API, and the video and generator will be processing each one separately, so you need to ensure that the beats you create have a common look and feel, and ensure consistent location, object and character definitions are used. Ensure that you are repeating all relevant definitions in each beat, not saying "refer to" or "same as", but actually writing the details all out and details must be repeated in each beat.
+
+      The JSON summary you return must contain the exact same beat text in each `beats[i].description` field as the prose you wrote above—no abridgement or summarisation. Copy the full beat paragraphs verbatim into the JSON so downstream systems receive the same rich detail.
 
       YOU MUST follow this structure EXACTLY. Use the specified headers.
 
@@ -180,7 +183,7 @@ class StoriesController < ApplicationController
             content: expanded_prompt
           }
         ],
-        max_tokens: 4000
+        max_tokens: 9000
       }.to_json
     )
 

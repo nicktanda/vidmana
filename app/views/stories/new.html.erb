@@ -167,6 +167,7 @@
                 <%= form_with url: stories_path, local: true, class: "inline-block" do |form| %>
                   <%= form.hidden_field :title, value: @api_response['title'] %>
                   <%= form.hidden_field :description, value: @api_response['description'] %>
+                  <%= form.hidden_field :prompt, value: @user_prompt %>
                   <%= form.hidden_field :full_data, value: @api_response.to_json %>
                   <%= form.hidden_field :save_story, value: true %>
                   <%= form.submit "Save This Story", class: "px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer" %>
