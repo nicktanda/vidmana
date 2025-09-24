@@ -9,11 +9,24 @@ class StoriesController < ApplicationController
   def show
   end
 
+  MODEL_OPTIONS = {
+    'x-ai/grok-3-mini' => 'Grok 3 Mini',
+    'qwen/qwen-2.5-72b-instruct' => 'Qwen 2.5',
+    'qwen/qwen3-coder' => 'Qwen 3 Coder'
+  }.freeze
+
+  DEFAULT_MODEL = 'x-ai/grok-3-mini'.freeze
+
   def new
     @story = current_user.stories.build
+    @model_options = MODEL_OPTIONS
+    @default_model = DEFAULT_MODEL
+    @selected_model = sanitized_model_choice(params.dig(:story, :model))
   end
 
   def create
+    @model_options = MODEL_OPTIONS
+    @default_model = DEFAULT_MODEL
     # Check if we're saving a generated story
     if params[:save_story] == 'true'
       @story = current_user.stories.build(
@@ -61,6 +74,8 @@ class StoriesController < ApplicationController
 
     # Otherwise, we're generating a new story from a prompt
     prompt = params.dig(:story, :prompt)
+    selected_model = sanitized_model_choice(params.dig(:story, :model))
+    @selected_model = selected_model
 
     unless prompt.present?
       redirect_to new_story_path, alert: 'Please enter a story prompt.'
@@ -69,7 +84,7 @@ class StoriesController < ApplicationController
 
     begin
       # Call OpenRouter API to generate story content
-      api_response = call_openrouter_api(prompt)
+      api_response = call_openrouter_api(prompt, selected_model)
 
       # For now, just display the response in the chat
       @api_response = api_response
@@ -115,8 +130,9 @@ class StoriesController < ApplicationController
       beats_attributes: [:id, :title, :description, :order_index, :_destroy])
   end
 
-  def call_openrouter_api(user_prompt)
+  def call_openrouter_api(user_prompt, model_choice)
     Rails.logger.info "🚀 Calling OpenRouter API with user prompt: #{user_prompt}"
+    Rails.logger.info "🤖 Using model: #{model_choice}"
 
     # Build the expanded prompt with the user's input
     expanded_prompt = <<~PROMPT
@@ -153,7 +169,7 @@ class StoriesController < ApplicationController
         'X-Title' => 'Story Generator'
       },
       body: {
-        model: 'minimax/minimax-01',
+        model: model_choice,
         messages: [
           {
             role: 'system',
@@ -194,7 +210,19 @@ class StoriesController < ApplicationController
       parsed_content
     else
       Rails.logger.error "❌ API request failed: #{response.code} - #{response.message}"
+      Rails.logger.error "❌ Response body: #{response.body}"
       raise "API request failed: #{response.code} - #{response.message}"
+    end
+  end
+
+  def sanitized_model_choice(raw_choice)
+    return DEFAULT_MODEL unless raw_choice.present?
+
+    if MODEL_OPTIONS.key?(raw_choice)
+      raw_choice
+    else
+      Rails.logger.warn "⚠️ Unknown model selection '#{raw_choice}', falling back to #{DEFAULT_MODEL}"
+      DEFAULT_MODEL
     end
   end
 end

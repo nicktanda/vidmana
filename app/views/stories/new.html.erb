@@ -182,6 +182,10 @@
     <div class="border-t border-gray-200 px-4 py-4">
       <div class="max-w-3xl mx-auto">
         <%= form_with(model: @story, local: true, id: "story-form", data: { turbo: false }) do |form| %>
+          <div class="flex items-center justify-between mb-3">
+            <label for="model-select" class="text-sm font-medium text-gray-700">Choose a model</label>
+            <%= select_tag 'story[model]', options_for_select(@model_options.map { |id, label| [label, id] }, @selected_model || @default_model), id: 'model-select', class: 'px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-600 focus:border-transparent' %>
+          </div>
           <div class="relative">
             <textarea
               name="story[prompt]"
