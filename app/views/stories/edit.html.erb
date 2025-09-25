@@ -2,6 +2,23 @@
   <div class="bg-white rounded-lg shadow-lg p-8">
     <h1 class="text-3xl font-bold mb-6">Edit Story</h1>
 
+    <!-- Regenerate Story Section -->
+    <div class="mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+      <h3 class="text-lg font-semibold mb-3 text-purple-800">Regenerate Story with AI</h3>
+      <p class="text-sm text-gray-600 mb-3">Use AI to regenerate and enhance your story while keeping the core elements.</p>
+
+      <%= form_with(url: regenerate_story_path(@story), method: :post, local: true, class: "flex gap-3 items-end") do |regen_form| %>
+        <div class="flex-1">
+          <%= regen_form.label :model, "Select Model", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= regen_form.select :model, options_for_select(@model_options, @selected_model), {},
+              class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" %>
+        </div>
+        <%= regen_form.submit "🔄 Regenerate Story",
+            class: "px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all cursor-pointer font-semibold",
+            data: { confirm: "This will regenerate the entire story (characters, locations, and beats) using AI. The current content will be replaced. Continue?" } %>
+      <% end %>
+    </div>
+
     <%= form_with(model: @story, local: true) do |form| %>
       <% if @story.errors.any? %>
         <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded">
@@ -13,6 +30,14 @@
           </ul>
         </div>
       <% end %>
+
+      <!-- Model Selection for Regeneration -->
+      <div class="mb-6">
+        <%= form.label :model, "AI Model (for regeneration)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+        <%= form.select :model, options_for_select(@model_options, @selected_model), {},
+            class: "w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" %>
+        <p class="text-xs text-gray-500 mt-1">This model will be used to regenerate the story when you save changes.</p>
+      </div>
 
       <!-- Basic Story Info -->
       <div class="mb-6">
@@ -132,7 +157,9 @@
       </div>
 
       <div class="flex gap-2">
-        <%= form.submit "Update Story", class: "flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors cursor-pointer" %>
+        <%= form.submit "Update & Regenerate Story",
+            class: "flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors cursor-pointer",
+            data: { confirm: "This will save your edits and regenerate the story with AI using your modified content as context. Continue?" } %>
         <%= link_to "Cancel", @story, class: "px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors" %>
       </div>
     <% end %>

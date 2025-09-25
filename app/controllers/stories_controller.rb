@@ -1,6 +1,6 @@
 class StoriesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_story, only: [:show, :edit, :update, :destroy]
+  before_action :set_story, only: [:show, :edit, :update, :destroy, :regenerate]
 
   def index
     @stories = current_user.stories.order(created_at: :desc)
@@ -103,13 +103,138 @@ class StoriesController < ApplicationController
   end
 
   def edit
+    @model_options = MODEL_OPTIONS
+    @selected_model = DEFAULT_MODEL
   end
 
   def update
+    # First update with the form parameters to capture user edits
     if @story.update(story_params)
-      redirect_to @story, notice: 'Story was successfully updated.'
+      # Now regenerate the story with the updated content
+      selected_model = sanitized_model_choice(params[:story][:model])
+
+      begin
+        # Build context from the updated story elements
+        context_prompt = build_regeneration_prompt(@story)
+
+        # Call OpenRouter API with the updated context
+        api_response = call_openrouter_api_for_regeneration(context_prompt, selected_model, @story)
+
+        # Update the story with the regenerated content
+        if api_response['characters'] && api_response['locations'] && api_response['beats']
+          ActiveRecord::Base.transaction do
+            # Update story title and description if provided
+            @story.update!(
+              title: api_response['title'] || @story.title,
+              description: api_response['description'] || @story.description
+            )
+
+            # Clear and recreate characters
+            @story.characters.destroy_all
+            api_response['characters'].each do |char_data|
+              @story.characters.create!(
+                name: char_data['name'],
+                description: char_data['description'],
+                role: char_data['role']
+              )
+            end
+
+            # Clear and recreate locations
+            @story.locations.destroy_all
+            api_response['locations'].each do |loc_data|
+              @story.locations.create!(
+                name: loc_data['name'],
+                description: loc_data['description'],
+                location_type: loc_data['location_type']
+              )
+            end
+
+            # Clear and recreate beats
+            @story.beats.destroy_all
+            api_response['beats'].each do |beat_data|
+              @story.beats.create!(
+                title: beat_data['title'],
+                description: beat_data['description'],
+                order_index: beat_data['order_index']
+              )
+            end
+          end
+
+          redirect_to @story, notice: 'Story was successfully updated and regenerated!'
+        else
+          redirect_to @story, notice: 'Story was updated but regeneration failed. Your changes were saved.'
+        end
+
+      rescue => e
+        Rails.logger.error "Error regenerating story during update: #{e.message}"
+        redirect_to @story, notice: 'Story was updated but regeneration failed. Your changes were saved.'
+      end
     else
+      @model_options = MODEL_OPTIONS
+      @selected_model = DEFAULT_MODEL
       render :edit
+    end
+  end
+
+  def regenerate
+    @model_options = MODEL_OPTIONS
+    selected_model = sanitized_model_choice(params[:model])
+
+    begin
+      # Build context from existing story elements
+      context_prompt = build_regeneration_prompt(@story)
+
+      # Call OpenRouter API with the context
+      api_response = call_openrouter_api_for_regeneration(context_prompt, selected_model, @story)
+
+      # Parse the response and update the story
+      if api_response['characters'] && api_response['locations'] && api_response['beats']
+        ActiveRecord::Base.transaction do
+          # Update story title and description if provided
+          @story.update!(
+            title: api_response['title'] || @story.title,
+            description: api_response['description'] || @story.description
+          )
+
+          # Clear and recreate characters
+          @story.characters.destroy_all
+          api_response['characters'].each do |char_data|
+            @story.characters.create!(
+              name: char_data['name'],
+              description: char_data['description'],
+              role: char_data['role']
+            )
+          end
+
+          # Clear and recreate locations
+          @story.locations.destroy_all
+          api_response['locations'].each do |loc_data|
+            @story.locations.create!(
+              name: loc_data['name'],
+              description: loc_data['description'],
+              location_type: loc_data['location_type']
+            )
+          end
+
+          # Clear and recreate beats
+          @story.beats.destroy_all
+          api_response['beats'].each do |beat_data|
+            @story.beats.create!(
+              title: beat_data['title'],
+              description: beat_data['description'],
+              order_index: beat_data['order_index']
+            )
+          end
+        end
+
+        redirect_to @story, notice: 'Story was successfully regenerated!'
+      else
+        redirect_to edit_story_path(@story), alert: 'Failed to regenerate story - invalid response format.'
+      end
+
+    rescue => e
+      Rails.logger.error "Error regenerating story: #{e.message}"
+      redirect_to edit_story_path(@story), alert: "Failed to regenerate story: #{e.message}"
     end
   end
 
@@ -226,6 +351,126 @@ class StoriesController < ApplicationController
     else
       Rails.logger.warn "⚠️ Unknown model selection '#{raw_choice}', falling back to #{DEFAULT_MODEL}"
       DEFAULT_MODEL
+    end
+  end
+
+  def build_regeneration_prompt(story)
+    # The prompt is the PRIMARY driver - treat it as the main instruction
+    if story.prompt.present?
+      primary_prompt = story.prompt
+    else
+      primary_prompt = "Create a compelling story"
+    end
+
+    # Build context from existing elements as SUGGESTIONS only
+    context_parts = []
+
+    # Add current characters as suggestions
+    if story.characters.any?
+      char_descriptions = story.characters.map do |char|
+        "#{char.name} (#{char.role}): #{char.description}"
+      end
+      context_parts << "Previous character ideas (feel free to modify or replace):\n#{char_descriptions.join("\n")}"
+    end
+
+    # Add current locations as suggestions
+    if story.locations.any?
+      loc_descriptions = story.locations.map do |loc|
+        "#{loc.name} (#{loc.location_type}): #{loc.description}"
+      end
+      context_parts << "Previous location ideas (feel free to modify or replace):\n#{loc_descriptions.join("\n")}"
+    end
+
+    # Add current beats as reference
+    if story.beats.any?
+      beat_descriptions = story.beats.order(:order_index).map do |beat|
+        "Beat #{beat.order_index}: #{beat.title}"
+      end
+      context_parts << "Previous story structure (for reference only):\n#{beat_descriptions.join("\n")}"
+    end
+
+    # Combine context if any exists
+    context = context_parts.any? ? "\n\nCONTEXT FROM PREVIOUS VERSION:\n#{context_parts.join("\n\n")}" : ""
+
+    # Return just the primary prompt with optional context
+    # This ensures the prompt is treated as the main instruction
+    "#{primary_prompt}#{context}"
+  end
+
+  def call_openrouter_api_for_regeneration(context_prompt, model_choice, story)
+    Rails.logger.info "🔄 Regenerating story with model: #{model_choice}"
+
+    # Use the same expanded prompt format as the create action for consistency
+    expanded_prompt = <<~PROMPT
+      #{context_prompt}
+
+      The text above is USER PROMPT.
+      AI INSTRUCTIONS:
+      Your task is to expand the USER PROMPT into a continuous story with 4 detailed beats. Each beat must be long-form—target 1,950 to 2,000 characters per beat—and under no circumstances end a beat below 1,900 characters. Expand with sensory detail, character thoughts, environmental texture, and narrative continuity so the length requirement is satisfied while keeping the story coherent. Ensure that you are consistent amongst each beat as each beat is independent of each other, and you must do the job of linking them by repeating descriptions of Characters, Locations, and Objects exactly the same in between the beats of the same story. Maintain consistent characters, objects, and locations across all beats to create a unified cinematic feel.
+
+      THE USER PROMPT IS THE PRIMARY INSTRUCTION - treat it as the main directive for the story. Any context from previous versions is merely suggestive and can be completely changed or ignored based on the new prompt.
+
+      First understand what the user prompt is asking. Is it about someone? Is it about something? Is it about a location? Is it about an animal? Consider the purpose of the user prompt and see how you can visualize their text in 4 beats.
+
+      Then assess the user prompt to identify characters, objects, locations, and fill in the [CHARACTER DEFINITIONS], [OBJECT DEFINITIONS], [LOCATION DEFINITIONS]. These will be headers that I will parse out the content in between them to various locations. You are now ready to generate the beats.
+
+      Each beat that you generate needs to be processed independently by a video generator API, and the video and generator will be processing each one separately, so you need to ensure that the beats you create have a common look and feel, and ensure consistent location, object and character definitions are used.
+
+      The JSON summary you return must contain the exact same beat text in each `beats[i].description` field as the prose you wrote above—no abridgement or summarisation. Copy the full beat paragraphs verbatim into the JSON so downstream systems receive the same rich detail.
+
+      YOU MUST follow this structure EXACTLY. Use the specified headers.
+
+      Also, return a JSON object at the end with this structure for database storage:
+      {
+        "title": "[Derive a title from the story]",
+        "description": "[Brief summary of the story]",
+        "characters": [{"name": "[Character Name]", "description": "[Full description]", "role": "protagonist/antagonist/supporting"}],
+        "locations": [{"name": "[Location Name]", "description": "[Full description]", "location_type": "setting/landmark/building"}],
+        "beats": [{"title": "Beat 1", "description": "[Beat 1 content]", "order_index": 1}]
+      }
+    PROMPT
+
+    response = HTTParty.post(
+      'https://openrouter.ai/api/v1/chat/completions',
+      headers: {
+        'Authorization' => "Bearer #{ENV['OPENROUTER_API_KEY']}",
+        'Content-Type' => 'application/json',
+        'HTTP-Referer' => request.base_url,
+        'X-Title' => 'Story Regenerator'
+      },
+      body: {
+        model: model_choice,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a cinematic story assistant. Generate a NEW story based on the USER PROMPT provided. The USER PROMPT is your primary instruction - treat it as the main directive. Any previous context is optional and can be completely changed. Follow the exact format provided in the prompt.'
+          },
+          {
+            role: 'user',
+            content: expanded_prompt
+          }
+        ],
+        max_tokens: 9000
+      }.to_json
+    )
+
+    Rails.logger.info "📡 Regeneration API Response Status: #{response.code}"
+
+    if response.success?
+      content = response.parsed_response.dig('choices', 0, 'message', 'content')
+
+      # Try to extract JSON from the response
+      json_match = content.match(/\{[\s\S]*\}/)
+      if json_match
+        parsed_content = JSON.parse(json_match[0])
+      else
+        raise "Could not parse regeneration response"
+      end
+
+      parsed_content
+    else
+      Rails.logger.error "❌ Regeneration API request failed: #{response.code} - #{response.message}"
+      raise "API request failed: #{response.code} - #{response.message}"
     end
   end
 end

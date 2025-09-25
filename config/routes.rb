@@ -3,7 +3,11 @@ Rails.application.routes.draw do
 
   authenticated :user do
     root "home#index", as: :authenticated_root
-    resources :stories
+    resources :stories do
+      member do
+        post :regenerate
+      end
+    end
   end
 
   root "home#index"
