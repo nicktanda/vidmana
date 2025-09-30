@@ -23,6 +23,11 @@ gem "jbuilder"
 # Use Devise for authentication
 gem "devise"
 
+# OAuth authentication
+gem "omniauth"
+gem "omniauth-google-oauth2"
+gem "omniauth-rails_csrf_protection"
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 

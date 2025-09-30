@@ -2,12 +2,24 @@ class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
-  
+         :recoverable, :rememberable, :validatable, :omniauthable, omniauth_providers: [:google_oauth2]
+
   has_many :stories, dependent: :destroy
-  
+
   validates :name, presence: true
   validate :password_strength_validation, if: :password_required?
+
+  # OmniAuth callback handler
+  def self.from_omniauth(auth)
+    where(email: auth.info.email).first_or_create do |user|
+      user.email = auth.info.email
+      user.name = auth.info.name
+      user.provider = auth.provider
+      user.uid = auth.uid
+      user.password = Devise.friendly_token[0, 20]
+      user.avatar_url = auth.info.image
+    end
+  end
 
   private
 
@@ -44,6 +56,7 @@ class User < ApplicationRecord
   end
 
   def password_required?
+    return false if provider.present? # OAuth users don't need passwords
     new_record? || password.present?
   end
 end

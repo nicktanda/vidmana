@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
-CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "encrypted_password" varchar DEFAULT '' NOT NULL, "reset_password_token" varchar, "reset_password_sent_at" datetime(6), "remember_created_at" datetime(6), "name" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "encrypted_password" varchar DEFAULT '' NOT NULL, "reset_password_token" varchar, "reset_password_sent_at" datetime(6), "remember_created_at" datetime(6), "name" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "provider" varchar /*application='Vidmana'*/, "uid" varchar /*application='Vidmana'*/, "avatar_url" varchar /*application='Vidmana'*/);
 CREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='Vidmana'*/;
 CREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token") /*application='Vidmana'*/;
 CREATE TABLE IF NOT EXISTS "stories" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "title" varchar NOT NULL, "description" text, "user_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "prompt" text /*application='Vidmana'*/, CONSTRAINT "fk_rails_c53f5feaac"
@@ -24,6 +24,7 @@ FOREIGN KEY ("story_id")
 );
 CREATE INDEX "index_locations_on_story_id" ON "locations" ("story_id") /*application='Vidmana'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20250925094543'),
 ('20250922004500'),
 ('20250922002749'),
 ('20250922001953'),
