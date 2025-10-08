@@ -82,4 +82,4 @@ end
 
 gem "tailwindcss-rails", "~> 4.3"
 
-gem "httparty", "~> 0.23.1"
+gem "httparty", "~> 0.23.2"
