@@ -11,7 +11,24 @@ Rails.application.routes.draw do
   end
 
   authenticated :user do
-    root "home#index", as: :authenticated_root
+    root "universes#index", as: :authenticated_root
+
+    resources :universes do
+      member do
+        post :regenerate
+      end
+
+      resources :chapters do
+        resources :scenes do
+          resources :beats
+        end
+      end
+
+      resources :characters
+      resources :locations
+    end
+
+    # Keep stories for backward compatibility if needed
     resources :stories do
       member do
         post :regenerate

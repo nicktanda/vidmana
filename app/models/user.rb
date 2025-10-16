@@ -5,6 +5,7 @@ class User < ApplicationRecord
   devise :database_authenticatable, :rememberable, :omniauthable, omniauth_providers: [:google_oauth2]
 
   has_many :stories, dependent: :destroy
+  has_many :universes, dependent: :destroy
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true

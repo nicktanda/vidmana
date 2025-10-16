@@ -1,0 +1,175 @@
+<div class="h-full flex flex-col">
+  <!-- Chat-like content area -->
+  <div class="flex-1 overflow-y-auto">
+    <div class="max-w-3xl mx-auto px-6 py-8">
+      <!-- Welcome Message -->
+      <% unless @user_prompt %>
+        <div class="flex gap-4 mb-8">
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0110 16z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
+              <h2 class="text-xl font-semibold text-white mb-3">Create a New Universe</h2>
+              <p class="text-gray-200 leading-relaxed">
+                Describe your story universe with as much detail as you'd like - genre, setting, characters, themes, or plot points. I'll generate a complete universe structure including characters, locations, chapters, scenes, and narrative beats.
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Show conversation if there's a response -->
+      <% if @user_prompt && @api_response %>
+        <!-- User Message -->
+        <div class="flex gap-4 mb-8">
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1">
+            <div class="bg-[#2f2f2f] rounded-lg p-4 border border-gray-600">
+              <p class="text-gray-100"><%= @user_prompt %></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Assistant Response -->
+        <div class="flex gap-4 mb-8">
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0110 16z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1 space-y-4">
+            <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
+              <p class="text-gray-100 mb-4">
+                I've created a comprehensive universe for you! Here's what I've generated:
+              </p>
+
+              <!-- Title -->
+              <div class="bg-gradient-to-r from-purple-900/50 to-blue-900/50 p-4 rounded-lg border border-purple-600 mb-4">
+                <h3 class="text-2xl font-bold text-white mb-2"><%= @api_response['title'] %></h3>
+                <p class="text-gray-200"><%= @api_response['description'] %></p>
+              </div>
+
+              <!-- Characters -->
+              <% if @api_response['characters'].present? %>
+                <div class="bg-[#252525] rounded-lg p-4 border border-gray-600 mb-4">
+                  <h4 class="font-semibold text-white mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                    Characters
+                  </h4>
+                  <div class="space-y-3">
+                    <% @api_response['characters'].each do |character| %>
+                      <div class="pl-4 border-l-2 border-purple-600">
+                        <p class="font-medium text-white"><%= character['name'] %></p>
+                        <p class="text-sm text-gray-400"><%= character['description'] %></p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Locations -->
+              <% if @api_response['locations'].present? %>
+                <div class="bg-[#252525] rounded-lg p-4 border border-gray-600 mb-4">
+                  <h4 class="font-semibold text-white mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                    </svg>
+                    Locations
+                  </h4>
+                  <div class="space-y-3">
+                    <% @api_response['locations'].each do |location| %>
+                      <div class="pl-4 border-l-2 border-blue-600">
+                        <p class="font-medium text-white"><%= location['name'] %></p>
+                        <p class="text-sm text-gray-400"><%= location['description'] %></p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Beats -->
+              <% if @api_response['beats'].present? %>
+                <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
+                  <h4 class="font-semibold text-white mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9.5H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    Story Beats
+                  </h4>
+                  <div class="space-y-3">
+                    <% @api_response['beats'].each_with_index do |beat, index| %>
+                      <div class="flex gap-3">
+                        <div class="flex-shrink-0">
+                          <div class="w-8 h-8 bg-green-900/50 rounded-full flex items-center justify-center border border-green-700">
+                            <span class="text-sm font-semibold text-green-400"><%= index + 1 %></span>
+                          </div>
+                        </div>
+                        <div class="flex-1">
+                          <p class="font-medium text-white"><%= beat['title'] %></p>
+                          <p class="text-sm text-gray-400 mt-1"><%= beat['description'] %></p>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <!-- Action Buttons -->
+              <div class="flex justify-end gap-3 mt-6">
+                <%= link_to "Start New", new_universe_path, class: "px-4 py-2 text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors" %>
+                <%= form_with url: universes_path, local: true, class: "inline-block" do |form| %>
+                  <%= form.hidden_field :name, value: @api_response['title'] %>
+                  <%= form.hidden_field :full_data, value: @api_response.to_json %>
+                  <%= form.hidden_field :save_universe, value: true %>
+                  <%= form.submit "Save Universe", class: "px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="border-t border-gray-700 px-6 py-4 bg-[#1a1a1a]">
+    <div class="max-w-3xl mx-auto">
+      <%= form_with(model: @universe, local: true, data: { turbo: false }) do |form| %>
+        <div class="flex items-center justify-between mb-3">
+          <label for="model-select" class="text-sm font-medium text-gray-300">Model</label>
+          <%= select_tag 'universe[model]', options_for_select(@model_options.map { |id, label| [label, id] }, @selected_model || @default_model), id: 'model-select', class: 'px-3 py-2 border border-gray-600 rounded-lg bg-[#2f2f2f] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
+        </div>
+        <div class="relative">
+          <textarea
+            name="universe[prompt]"
+            placeholder="Describe your universe..."
+            class="w-full px-4 py-3 pr-12 border border-gray-600 bg-[#2f2f2f] text-gray-100 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-600 placeholder-gray-400"
+            rows="3"></textarea>
+
+          <button
+            type="submit"
+            class="absolute bottom-3 right-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg p-2 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

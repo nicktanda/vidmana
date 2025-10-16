@@ -1,3 +1,5 @@
 class Character < ApplicationRecord
-  belongs_to :story
+  belongs_to :universe
+
+  validates :name, presence: true
 end

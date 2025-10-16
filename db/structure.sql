@@ -1,29 +1,45 @@
 CREATE TABLE IF NOT EXISTS "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
-CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "encrypted_password" varchar DEFAULT '' NOT NULL, "reset_password_token" varchar, "reset_password_sent_at" datetime(6), "remember_created_at" datetime(6), "name" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "provider" varchar /*application='Vidmana'*/, "uid" varchar /*application='Vidmana'*/, "avatar_url" varchar /*application='Vidmana'*/);
-CREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='Vidmana'*/;
-CREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token") /*application='Vidmana'*/;
 CREATE TABLE IF NOT EXISTS "stories" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "title" varchar NOT NULL, "description" text, "user_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "prompt" text /*application='Vidmana'*/, CONSTRAINT "fk_rails_c53f5feaac"
 FOREIGN KEY ("user_id")
   REFERENCES "users" ("id")
 );
 CREATE INDEX "index_stories_on_user_id" ON "stories" ("user_id") /*application='Vidmana'*/;
-CREATE TABLE IF NOT EXISTS "beats" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "title" varchar NOT NULL, "description" text NOT NULL, "story_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "order_index" integer /*application='Vidmana'*/, CONSTRAINT "fk_rails_401743b646"
-FOREIGN KEY ("story_id")
-  REFERENCES "stories" ("id")
+CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "encrypted_password" varchar DEFAULT '' NOT NULL, "reset_password_token" varchar, "reset_password_sent_at" datetime(6), "remember_created_at" datetime(6), "name" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "provider" varchar /*application='Vidmana'*/, "uid" varchar /*application='Vidmana'*/, "avatar_url" varchar /*application='Vidmana'*/);
+CREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='Vidmana'*/;
+CREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "universes" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "user_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_dcb1aabc38"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
 );
-CREATE INDEX "index_beats_on_story_id" ON "beats" ("story_id") /*application='Vidmana'*/;
-CREATE TABLE IF NOT EXISTS "characters" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "description" text, "story_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "role" varchar /*application='Vidmana'*/, CONSTRAINT "fk_rails_6608c248e8"
-FOREIGN KEY ("story_id")
-  REFERENCES "stories" ("id")
+CREATE INDEX "index_universes_on_user_id" ON "universes" ("user_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "chapters" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "description" text, "universe_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_b3a6806c88"
+FOREIGN KEY ("universe_id")
+  REFERENCES "universes" ("id")
 );
-CREATE INDEX "index_characters_on_story_id" ON "characters" ("story_id") /*application='Vidmana'*/;
-CREATE TABLE IF NOT EXISTS "locations" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "description" text, "story_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "location_type" varchar /*application='Vidmana'*/, CONSTRAINT "fk_rails_fedd9b21a0"
-FOREIGN KEY ("story_id")
-  REFERENCES "stories" ("id")
+CREATE INDEX "index_chapters_on_universe_id" ON "chapters" ("universe_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "scenes" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "description" text, "chapter_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_cd5ff5d11b"
+FOREIGN KEY ("chapter_id")
+  REFERENCES "chapters" ("id")
 );
-CREATE INDEX "index_locations_on_story_id" ON "locations" ("story_id") /*application='Vidmana'*/;
+CREATE INDEX "index_scenes_on_chapter_id" ON "scenes" ("chapter_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "characters" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "description" text, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "role" varchar, "universe_id" integer, CONSTRAINT "fk_rails_e7093ff482"
+FOREIGN KEY ("universe_id")
+  REFERENCES "universes" ("id")
+);
+CREATE INDEX "index_characters_on_universe_id" ON "characters" ("universe_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "locations" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "description" text, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "location_type" varchar, "universe_id" integer, CONSTRAINT "fk_rails_d649f80004"
+FOREIGN KEY ("universe_id")
+  REFERENCES "universes" ("id")
+);
+CREATE INDEX "index_locations_on_universe_id" ON "locations" ("universe_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "beats" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "title" varchar NOT NULL, "description" text NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "order_index" integer, "scene_id" integer, CONSTRAINT "fk_rails_a9549b15d0"
+FOREIGN KEY ("scene_id")
+  REFERENCES "scenes" ("id")
+);
+CREATE INDEX "index_beats_on_scene_id" ON "beats" ("scene_id") /*application='Vidmana'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251015125406'),
 ('20250925094543'),
 ('20250922004500'),
 ('20250922002749'),
