@@ -83,15 +83,9 @@ class UniversesController < ApplicationController
     end
 
     # Otherwise, we're generating a new universe from a prompt
-    Rails.logger.info "🔍 Received params: #{params.inspect}"
-    Rails.logger.info "🔍 Universe params: #{params[:universe].inspect}"
-
     prompt = params.dig(:universe, :prompt)
     selected_model = sanitized_model_choice(params.dig(:universe, :model))
     @selected_model = selected_model
-
-    Rails.logger.info "🔍 Extracted prompt: '#{prompt}'"
-    Rails.logger.info "🔍 Prompt present?: #{prompt.present?}"
 
     unless prompt.present?
       redirect_to root_path, alert: 'Please enter a story prompt.'
