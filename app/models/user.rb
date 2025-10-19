@@ -6,9 +6,13 @@ class User < ApplicationRecord
 
   has_many :stories, dependent: :destroy
   has_many :universes, dependent: :destroy
+  has_one :mana_prompt, dependent: :destroy
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true
+  validate :must_have_mana_prompt
+
+  after_create :create_default_mana_prompt
 
   # OmniAuth callback handler
   def self.from_omniauth(auth)
@@ -19,5 +23,15 @@ class User < ApplicationRecord
       user.uid = auth.uid
       user.avatar_url = auth.info.image
     end
+  end
+
+  private
+
+  def create_default_mana_prompt
+    create_mana_prompt!(content: ManaPrompt::DEFAULT_PROMPT)
+  end
+
+  def must_have_mana_prompt
+    errors.add(:base, "User must have a ManaPrompt") if persisted? && mana_prompt.nil?
   end
 end

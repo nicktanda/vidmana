@@ -41,7 +41,13 @@ CREATE INDEX "index_beats_on_scene_id" ON "beats" ("scene_id") /*application='Vi
 CREATE TABLE IF NOT EXISTS "sessions" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "session_id" varchar NOT NULL, "data" text, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
 CREATE UNIQUE INDEX "index_sessions_on_session_id" ON "sessions" ("session_id") /*application='Vidmana'*/;
 CREATE INDEX "index_sessions_on_updated_at" ON "sessions" ("updated_at") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "mana_prompts" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "user_id" integer NOT NULL, "content" text NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_3d9ebbd959"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+);
+CREATE UNIQUE INDEX "index_mana_prompts_on_user_id" ON "mana_prompts" ("user_id") /*application='Vidmana'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251019124456'),
 ('20251019122547'),
 ('20251016092253'),
 ('20251015125406'),

@@ -1,0 +1,41 @@
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl font-bold text-gray-900">Edit ManaPrompt</h1>
+      <div class="flex gap-2">
+        <%= link_to authenticated_root_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors flex items-center" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to Home
+        <% end %>
+        <%= link_to mana_prompts_path, class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          View
+        <% end %>
+      </div>
+    </div>
+    <p class="text-gray-400">Edit the AI prompt template. Use <code class="bg-gray-700 px-2 py-1 rounded text-xs">{USER_PROMPT}</code> as a placeholder for where the user's prompt will be inserted.</p>
+  </div>
+
+  <!-- Edit Form -->
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Prompt Template</h2>
+    <%= form_with(model: @mana_prompt, url: mana_prompts_path, method: :patch, local: true) do |form| %>
+      <div class="mb-4">
+        <%= form.label :content, "Template Content", class: "block text-sm font-medium text-gray-300 mb-2" %>
+        <%= form.text_area :content, rows: 25, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 font-mono text-sm" %>
+        <p class="text-xs text-gray-400 mt-1">This template will be used for all new universe generations. Make sure to include <code class="bg-gray-700 px-2 py-1 rounded">{USER_PROMPT}</code> where you want the user's input.</p>
+      </div>
+
+      <div class="flex gap-3">
+        <%= form.submit "Save Changes", class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer" %>
+        <%= link_to "Cancel", mana_prompts_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+</div>
