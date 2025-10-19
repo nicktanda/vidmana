@@ -7,6 +7,8 @@ class User < ApplicationRecord
   has_many :stories, dependent: :destroy
   has_many :universes, dependent: :destroy
   has_one :mana_prompt, dependent: :destroy
+  has_many :universe_shares, dependent: :destroy
+  has_many :shared_universes, through: :universe_shares, source: :universe
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true

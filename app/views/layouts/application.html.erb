@@ -50,14 +50,29 @@
 
           <!-- Navigation -->
           <nav class="flex-1 overflow-y-auto p-3 space-y-1">
-            <% if current_user.universes.any? %>
+            <% owned = current_user.universes.order(created_at: :desc).limit(10) %>
+            <% shared = current_user.shared_universes.order(created_at: :desc).limit(10) %>
+            <% if owned.any? || shared.any? %>
               <div class="mb-2">
                 <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                   Universes
                 </div>
-                <% current_user.universes.order(created_at: :desc).limit(10).each do |universe| %>
+                <% owned.each do |universe| %>
                   <%= link_to universe, class: "block px-3 py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors text-gray-300 hover:text-white text-sm truncate" do %>
                     <%= universe.name %>
+                  <% end %>
+                <% end %>
+                <% if shared.any? %>
+                  <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-3">
+                    Shared With Me
+                  </div>
+                  <% shared.each do |universe| %>
+                    <%= link_to universe, class: "flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors text-gray-300 hover:text-white text-sm" do %>
+                      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                      </svg>
+                      <span class="truncate"><%= universe.name %></span>
+                    <% end %>
                   <% end %>
                 <% end %>
               </div>

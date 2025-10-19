@@ -1,6 +1,8 @@
 class UniversesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_universe, only: [:show, :edit, :update, :destroy, :regenerate]
+  before_action :authorize_view!, only: [:show]
+  before_action :authorize_edit!, only: [:edit, :update, :destroy, :regenerate]
 
   MODEL_OPTIONS = {
     'x-ai/grok-4-fast' => 'Grok 4 Fast',
@@ -12,7 +14,10 @@ class UniversesController < ApplicationController
   DEFAULT_MODEL = 'x-ai/grok-4-fast'.freeze
 
   def index
-    @universes = current_user.universes.order(created_at: :desc)
+    # Get owned universes and shared universes
+    @owned_universes = current_user.universes.order(created_at: :desc)
+    @shared_universes = current_user.shared_universes.order(created_at: :desc)
+    @universes = @owned_universes # Keep for backward compatibility
 
     # For ChatGPT-style interface: show API response if available
     @api_response = session.delete(:api_response)
@@ -25,6 +30,11 @@ class UniversesController < ApplicationController
   end
 
   def show
+    # Get available users to share with (exclude owner and already shared users)
+    if @universe.user_id == current_user.id
+      already_shared_user_ids = @universe.universe_shares.pluck(:user_id)
+      @available_users = User.where.not(id: [current_user.id] + already_shared_user_ids).order(:name)
+    end
   end
 
   def new
@@ -228,7 +238,20 @@ class UniversesController < ApplicationController
   private
 
   def set_universe
-    @universe = current_user.universes.find(params[:id])
+    # Find universe that user owns or has been shared with
+    @universe = Universe.includes(universe_shares: :user).find(params[:id])
+  end
+
+  def authorize_view!
+    unless @universe.can_view?(current_user)
+      redirect_to authenticated_root_path, alert: "You don't have permission to view this universe."
+    end
+  end
+
+  def authorize_edit!
+    unless @universe.can_edit?(current_user)
+      redirect_to @universe, alert: "You don't have permission to edit this universe."
+    end
   end
 
   def universe_params

@@ -21,6 +21,18 @@
     </div>
   </div>
 
+  <!-- Sharing Status (for shared universes) -->
+  <% if @universe.user_id != current_user.id %>
+    <div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4 mb-6">
+      <div class="flex items-center gap-2 text-sm text-blue-200">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>You are editing a universe shared by <strong><%= @universe.user.name %></strong> • You have <strong><%= @universe.permission_for(current_user) %></strong> access</span>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Edit and Regenerate Form -->
   <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
     <h2 class="text-xl font-semibold text-gray-900 mb-4">Universe Details</h2>

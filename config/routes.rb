@@ -27,6 +27,7 @@ Rails.application.routes.draw do
 
     resources :characters
     resources :locations
+    resources :universe_shares, only: [:create, :update, :destroy]
   end
 
   # Keep stories for backward compatibility if needed

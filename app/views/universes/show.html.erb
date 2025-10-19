@@ -10,17 +10,21 @@
           </svg>
           Back to Home
         <% end %>
-        <%= link_to edit_universe_path(@universe), class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center" do %>
-          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-          Edit
+        <% if @universe.can_edit?(current_user) %>
+          <%= link_to edit_universe_path(@universe), class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center" do %>
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit
+          <% end %>
         <% end %>
-        <%= button_to universe_path(@universe), method: :delete, data: { turbo_confirm: 'Are you sure?' }, form_class: "inline-block", class: "px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center cursor-pointer" do %>
-          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-          <span>Delete</span>
+        <% if @universe.user_id == current_user.id %>
+          <%= button_to universe_path(@universe), method: :delete, data: { turbo_confirm: 'Are you sure?' }, form_class: "inline-block", class: "px-4 py-2 bg-red-500 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center cursor-pointer" do %>
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            <span>Delete</span>
+          <% end %>
         <% end %>
       </div>
     </div>
@@ -31,6 +35,98 @@
     <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Original Prompt</h2>
       <p class="text-gray-300 leading-relaxed"><%= @universe.prompt %></p>
+    </div>
+  <% end %>
+
+  <!-- Sharing Section (only visible to owner) -->
+  <% if @universe.user_id == current_user.id %>
+    <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+        </svg>
+        Sharing
+      </h2>
+
+      <!-- Add New Share Form -->
+      <% if @available_users.any? %>
+        <div class="mb-6">
+          <%= form_with url: universe_universe_shares_path(@universe), method: :post, local: true, class: "flex gap-3" do |f| %>
+            <select name="user_id" required class="flex-1 px-4 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+              <option value="">Select a user...</option>
+              <% @available_users.each do |user| %>
+                <option value="<%= user.id %>"><%= user.name %> (<%= user.email %>)</option>
+              <% end %>
+            </select>
+            <select name="permission_level" class="px-4 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+              <option value="view">Can View</option>
+              <option value="edit">Can Edit</option>
+            </select>
+            <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+              Share
+            </button>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="mb-6">
+          <p class="text-sm text-gray-400 text-center py-3 bg-[#252525] rounded-lg border border-gray-600">
+            No more users available to share with.
+          </p>
+        </div>
+      <% end %>
+
+      <!-- Current Shares List -->
+      <% if @universe.universe_shares.any? %>
+        <div class="space-y-3">
+          <p class="text-sm text-gray-400 mb-3">People with access:</p>
+          <% @universe.universe_shares.each do |share| %>
+            <div class="flex items-center justify-between bg-[#252525] rounded-lg p-4 border border-gray-600">
+              <div class="flex items-center gap-3">
+                <% if share.user.avatar_url.present? %>
+                  <img src="<%= share.user.avatar_url %>" alt="<%= share.user.name %>" class="h-8 w-8 rounded-full">
+                <% else %>
+                  <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">
+                    <span class="text-white text-sm font-medium">
+                      <%= share.user.name.first.upcase %>
+                    </span>
+                  </div>
+                <% end %>
+                <div>
+                  <p class="text-sm font-medium text-gray-200"><%= share.user.name %></p>
+                  <p class="text-xs text-gray-400"><%= share.user.email %></p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <%= form_with url: universe_universe_share_path(@universe, share), method: :patch, local: true, class: "inline" do |f| %>
+                  <select name="permission_level" onchange="this.form.submit()" class="px-3 py-1 text-sm border border-gray-600 bg-[#252525] text-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-purple-600">
+                    <option value="view" <%= 'selected' if share.permission_level == 'view' %>>Can View</option>
+                    <option value="edit" <%= 'selected' if share.permission_level == 'edit' %>>Can Edit</option>
+                  </select>
+                <% end %>
+                <%= button_to universe_universe_share_path(@universe, share), method: :delete,
+                              data: { turbo_confirm: 'Remove access for this user?' },
+                              class: "text-red-400 hover:text-red-300 ml-2" do %>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-400 text-center py-4">Not shared with anyone yet.</p>
+      <% end %>
+    </div>
+  <% elsif @universe.permission_for(current_user) %>
+    <!-- Sharing status for non-owners -->
+    <div class="bg-[#2f2f2f] rounded-lg p-4 border border-gray-600 mb-6">
+      <div class="flex items-center gap-2 text-sm text-gray-300">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Shared by <strong><%= @universe.user.name %></strong> • You have <strong><%= @universe.permission_for(current_user) %></strong> access</span>
+      </div>
     </div>
   <% end %>
 

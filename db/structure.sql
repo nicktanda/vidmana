@@ -46,7 +46,18 @@ FOREIGN KEY ("user_id")
   REFERENCES "users" ("id")
 );
 CREATE UNIQUE INDEX "index_mana_prompts_on_user_id" ON "mana_prompts" ("user_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "universe_shares" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "universe_id" integer NOT NULL, "user_id" integer NOT NULL, "permission_level" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_fd99c5a90d"
+FOREIGN KEY ("universe_id")
+  REFERENCES "universes" ("id")
+, CONSTRAINT "fk_rails_4b9e6c1d76"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+);
+CREATE INDEX "index_universe_shares_on_universe_id" ON "universe_shares" ("universe_id") /*application='Vidmana'*/;
+CREATE INDEX "index_universe_shares_on_user_id" ON "universe_shares" ("user_id") /*application='Vidmana'*/;
+CREATE UNIQUE INDEX "index_universe_shares_on_universe_id_and_user_id" ON "universe_shares" ("universe_id", "user_id") /*application='Vidmana'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251019125956'),
 ('20251019124456'),
 ('20251019122547'),
 ('20251016092253'),
