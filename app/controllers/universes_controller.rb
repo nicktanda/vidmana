@@ -3,12 +3,13 @@ class UniversesController < ApplicationController
   before_action :set_universe, only: [:show, :edit, :update, :destroy, :regenerate]
 
   MODEL_OPTIONS = {
+    'x-ai/grok-4-fast' => 'Grok 4 Fast',
     'x-ai/grok-3-mini' => 'Grok 3 Mini',
     'qwen/qwen-2.5-72b-instruct' => 'Qwen 2.5',
     'qwen/qwen3-coder' => 'Qwen 3 Coder'
   }.freeze
 
-  DEFAULT_MODEL = 'x-ai/grok-3-mini'.freeze
+  DEFAULT_MODEL = 'x-ai/grok-4-fast'.freeze
 
   def index
     @universes = current_user.universes.order(created_at: :desc)

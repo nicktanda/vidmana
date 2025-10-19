@@ -152,7 +152,12 @@
       <%= form_with(model: @universe, url: universes_path, local: true, data: { turbo: false }, id: "universe-form") do |form| %>
         <div class="flex items-center justify-between mb-3">
           <label for="model-select" class="text-sm font-medium text-gray-300">Model</label>
-          <%= select_tag 'universe[model]', options_for_select(@model_options.map { |id, label| [label, id] }, @selected_model || @default_model), id: 'model-select', class: 'px-3 py-2 border border-gray-600 rounded-lg bg-[#2f2f2f] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
+          <%= select_tag 'universe[model]', options_for_select([
+                ['Grok 4 Fast', 'x-ai/grok-4-fast'],
+                ['Grok 3 Mini', 'x-ai/grok-3-mini'],
+                ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
+                ['Qwen 3 Coder', 'qwen/qwen3-coder']
+              ], @selected_model || @default_model), id: 'model-select', class: 'px-3 py-2 border border-gray-600 rounded-lg bg-[#2f2f2f] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
         </div>
         <div class="relative">
           <%= form.text_field :prompt,
