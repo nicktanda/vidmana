@@ -77,18 +77,24 @@ class UniversesController < ApplicationController
 
         redirect_to @universe, notice: 'Universe was successfully created!'
       else
-        redirect_to new_universe_path, alert: 'Failed to save universe.'
+        redirect_to root_path, alert: 'Failed to save universe.'
       end
       return
     end
 
     # Otherwise, we're generating a new universe from a prompt
+    Rails.logger.info "🔍 Received params: #{params.inspect}"
+    Rails.logger.info "🔍 Universe params: #{params[:universe].inspect}"
+
     prompt = params.dig(:universe, :prompt)
     selected_model = sanitized_model_choice(params.dig(:universe, :model))
     @selected_model = selected_model
 
+    Rails.logger.info "🔍 Extracted prompt: '#{prompt}'"
+    Rails.logger.info "🔍 Prompt present?: #{prompt.present?}"
+
     unless prompt.present?
-      redirect_to new_universe_path, alert: 'Please enter a story prompt.'
+      redirect_to root_path, alert: 'Please enter a story prompt.'
       return
     end
 

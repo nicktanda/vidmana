@@ -38,7 +38,11 @@ FOREIGN KEY ("scene_id")
   REFERENCES "scenes" ("id")
 );
 CREATE INDEX "index_beats_on_scene_id" ON "beats" ("scene_id") /*application='Vidmana'*/;
+CREATE TABLE IF NOT EXISTS "sessions" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "session_id" varchar NOT NULL, "data" text, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE UNIQUE INDEX "index_sessions_on_session_id" ON "sessions" ("session_id") /*application='Vidmana'*/;
+CREATE INDEX "index_sessions_on_updated_at" ON "sessions" ("updated_at") /*application='Vidmana'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251016092253'),
 ('20251015125406'),
 ('20250925094543'),
 ('20250922004500'),

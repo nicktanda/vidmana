@@ -6,37 +6,37 @@ Rails.application.routes.draw do
     }
 
   devise_scope :user do
-    get 'sign_in', to: 'devise/sessions#new', as: :new_user_session
-    delete 'sign_out', to: 'devise/sessions#destroy', as: :destroy_user_session
+    get 'sign_in', to: 'users/sessions#new', as: :new_user_session
+    delete 'sign_out', to: 'users/sessions#destroy', as: :destroy_user_session
+  end
+
+  resources :universes do
+    member do
+      post :regenerate
+    end
+
+    resources :chapters do
+      resources :scenes do
+        resources :beats
+      end
+    end
+
+    resources :characters
+    resources :locations
+  end
+
+  # Keep stories for backward compatibility if needed
+  resources :stories do
+    member do
+      post :regenerate
+    end
   end
 
   authenticated :user do
     root "universes#index", as: :authenticated_root
-
-    resources :universes do
-      member do
-        post :regenerate
-      end
-
-      resources :chapters do
-        resources :scenes do
-          resources :beats
-        end
-      end
-
-      resources :characters
-      resources :locations
-    end
-
-    # Keep stories for backward compatibility if needed
-    resources :stories do
-      member do
-        post :regenerate
-      end
-    end
   end
 
-  root "home#index"
+  root "universes#new"
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

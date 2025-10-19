@@ -29,5 +29,8 @@ module Vidmana
 
     # Configure Propshaft to include Tailwind builds
     config.assets.paths << Rails.root.join("app/assets/builds")
+
+    # Use database-backed session store for better performance and no cookie overflow
+    config.session_store :active_record_store, key: '_vidmana_session'
   end
 end
