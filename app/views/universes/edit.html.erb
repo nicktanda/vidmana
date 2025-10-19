@@ -1,4 +1,197 @@
-<div>
-  <h1 class="font-bold text-4xl">Universes#edit</h1>
-  <p>Find me in app/views/universes/edit.html.erb</p>
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl font-bold text-gray-900">Edit Universe</h1>
+      <div class="flex gap-2">
+        <%= link_to authenticated_root_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors flex items-center" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to Home
+        <% end %>
+        <%= link_to @universe, class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+          View
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit and Regenerate Form -->
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Universe Details</h2>
+    <%= form_with url: regenerate_universe_path(@universe), method: :post, local: true do |form| %>
+      <div class="mb-4">
+        <%= form.label :name, "Name", class: "block text-sm font-medium text-gray-300 mb-2" %>
+        <%= form.text_field :name, value: @universe.name, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :prompt, "Prompt", class: "block text-sm font-medium text-gray-300 mb-2" %>
+        <%= form.text_field :prompt, value: @universe.prompt, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600", placeholder: "Describe your universe..." %>
+        <p class="text-xs text-gray-400 mt-1">Edit this prompt to regenerate the universe with new content based on your changes.</p>
+      </div>
+
+      <div class="mb-4">
+        <%= form.label :model, "AI Model", class: "block text-sm font-medium text-gray-300 mb-2" %>
+        <%= form.select :model,
+            options_for_select([
+              ['Grok 4 Fast', 'x-ai/grok-4-fast'],
+              ['Grok 3 Mini', 'x-ai/grok-3-mini'],
+              ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
+              ['Qwen 3 Coder', 'qwen/qwen3-coder']
+            ], @selected_model || 'x-ai/grok-4-fast'),
+            {},
+            class: 'px-3 py-2 border border-gray-600 rounded-lg bg-[#252525] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" id="regenerate-button" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          <span id="button-text">Save And Regenerate</span>
+          <div id="progress-indicator" class="hidden flex items-center gap-1">
+            <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+            <span id="progress-text" class="text-xs font-mono">0%</span>
+          </div>
+        </button>
+        <%= link_to "Cancel", @universe, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+
+  <script>
+    (function() {
+      const form = document.querySelector('form');
+      const submitButton = document.getElementById('regenerate-button');
+      const buttonText = document.getElementById('button-text');
+      const progressIndicator = document.getElementById('progress-indicator');
+      const progressText = document.getElementById('progress-text');
+      const promptField = document.querySelector('input[name="prompt"]');
+      const nameField = document.querySelector('input[name="name"]');
+
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          if (promptField && promptField.value.trim()) {
+            // Hide button text, show progress indicator
+            buttonText.classList.add('hidden');
+            progressIndicator.classList.remove('hidden');
+
+            // Disable submit button and make fields readonly
+            submitButton.disabled = true;
+            promptField.readOnly = true;
+            nameField.readOnly = true;
+            promptField.classList.add('opacity-50', 'cursor-not-allowed');
+            nameField.classList.add('opacity-50', 'cursor-not-allowed');
+
+            // Animate progress percentage
+            let progress = 0;
+            const interval = setInterval(function() {
+              if (progress < 90) {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                progressText.textContent = Math.round(progress) + '%';
+              }
+            }, 400);
+          }
+        });
+      }
+    })();
+  </script>
+
+  <!-- Characters Section -->
+  <% if @universe.characters.any? %>
+    <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        Characters
+      </h2>
+      <div class="grid gap-4">
+        <% @universe.characters.each do |character| %>
+          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
+            <h3 class="font-medium text-gray-900 mb-2"><%= character.name %></h3>
+            <p class="text-sm text-gray-400"><%= character.description %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Locations Section -->
+  <% if @universe.locations.any? %>
+    <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Locations
+      </h2>
+      <div class="grid gap-4">
+        <% @universe.locations.each do |location| %>
+          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
+            <h3 class="font-medium text-gray-900 mb-2"><%= location.name %></h3>
+            <p class="text-sm text-gray-400"><%= location.description %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Chapters Section -->
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        Story Structure
+      </h2>
+    </div>
+
+    <% if @universe.chapters.any? %>
+      <div class="space-y-4">
+        <% @universe.chapters.each do |chapter| %>
+          <div class="border-l-2 border-green-600 pl-4">
+            <h5 class="font-semibold text-gray-900 mb-2"><%= chapter.name %></h5>
+            <% if chapter.description.present? %>
+              <p class="text-sm text-gray-400 mb-3"><%= chapter.description %></p>
+            <% end %>
+
+            <% chapter.scenes.each do |scene| %>
+              <div class="ml-4 mb-3">
+                <p class="text-sm font-medium text-purple-400 mb-2"><%= scene.name %></p>
+
+                <% if scene.description.present? %>
+                  <p class="text-sm text-gray-300 mt-2 mb-3 leading-relaxed"><%= scene.description %></p>
+                <% end %>
+
+                <% if scene.beats.any? %>
+                  <% scene.beats.each_with_index do |beat, beat_index| %>
+                    <div class="flex gap-2 mb-2 ml-4">
+                      <div class="flex-shrink-0">
+                        <div class="w-6 h-6 bg-green-900/50 rounded-full flex items-center justify-center border border-green-700">
+                          <span class="text-xs font-semibold text-green-400"><%= beat_index + 1 %></span>
+                        </div>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium text-white"><%= beat.title %></p>
+                        <p class="text-xs text-gray-400 mt-1"><%= beat.description&.truncate(200) %></p>
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-gray-300 text-center py-8">No chapters yet. Add your first chapter to get started!</p>
+    <% end %>
+  </div>
 </div>

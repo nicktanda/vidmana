@@ -41,7 +41,8 @@ class UniversesController < ApplicationController
     # Check if we're saving a generated universe
     if params[:save_universe] == 'true'
       @universe = current_user.universes.build(
-        name: params[:name]
+        name: params[:name],
+        prompt: params[:prompt]
       )
 
       if @universe.save
@@ -97,22 +98,25 @@ class UniversesController < ApplicationController
     end
 
     # Otherwise, we're generating a new universe from a prompt
-    prompt = params.dig(:universe, :prompt)
+    user_prompt = params.dig(:universe, :prompt)
     selected_model = sanitized_model_choice(params.dig(:universe, :model))
     @selected_model = selected_model
 
-    unless prompt.present?
+    unless user_prompt.present?
       redirect_to root_path, alert: 'Please enter a story prompt.'
       return
     end
 
     begin
       # Call OpenRouter API to generate story content
-      api_response = call_openrouter_api(prompt, selected_model)
+      api_response = call_openrouter_api(user_prompt, selected_model)
+
+      # Store prompt in api_response so it gets saved later
+      api_response['prompt'] = user_prompt
 
       # Store in session and redirect to index for ChatGPT-style display
       session[:api_response] = api_response
-      session[:user_prompt] = prompt
+      session[:user_prompt] = user_prompt
       session[:selected_model] = selected_model
       redirect_to authenticated_root_path
 
@@ -142,46 +146,66 @@ class UniversesController < ApplicationController
     selected_model = sanitized_model_choice(params[:model])
 
     begin
-      # Build context from existing universe elements
-      context_prompt = build_regeneration_prompt(@universe)
+      # Use the prompt from params if provided, otherwise use existing universe prompt
+      user_prompt = params[:prompt].present? ? params[:prompt] : @universe.prompt
 
-      # Call OpenRouter API with the context
-      api_response = call_openrouter_api_for_regeneration(context_prompt, selected_model, @universe)
+      # Update the universe name and prompt
+      @universe.update(
+        name: params[:name].present? ? params[:name] : @universe.name,
+        prompt: params[:prompt].present? ? params[:prompt] : @universe.prompt
+      )
+
+      # Call OpenRouter API with the prompt
+      api_response = call_openrouter_api(user_prompt, selected_model)
 
       # Update the universe with the regenerated content
-      if api_response['characters'] && api_response['locations'] && api_response['beats']
+      if api_response['characters'] && api_response['locations'] && api_response['chapters']
         ActiveRecord::Base.transaction do
-          @universe.update!(name: api_response['title'] || @universe.name)
 
-          # Get or create default chapter and scene
-          chapter = @universe.chapters.first || @universe.chapters.create!(name: "Chapter 1")
-          scene = chapter.scenes.first || chapter.scenes.create!(name: "Scene 1")
-
-          # Clear and recreate characters
+          # Clear existing data
           @universe.characters.destroy_all
-          api_response['characters'].each do |char_data|
+          @universe.locations.destroy_all
+          @universe.chapters.destroy_all
+
+          # Create characters
+          api_response['characters']&.each do |char_data|
             @universe.characters.create!(
               name: char_data['name'],
-              description: char_data['description']
+              description: char_data['description'],
+              role: char_data['role']
             )
           end
 
-          # Clear and recreate locations
-          @universe.locations.destroy_all
-          api_response['locations'].each do |loc_data|
+          # Create locations
+          api_response['locations']&.each do |loc_data|
             @universe.locations.create!(
               name: loc_data['name'],
-              description: loc_data['description']
+              description: loc_data['description'],
+              location_type: loc_data['location_type']
             )
           end
 
-          # Clear and recreate beats
-          scene.beats.destroy_all
-          api_response['beats'].each do |beat_data|
-            scene.beats.create!(
-              title: beat_data['title'],
-              description: beat_data['description']
+          # Create chapters, scenes, and beats
+          api_response['chapters']&.each do |chapter_data|
+            chapter = @universe.chapters.create!(
+              name: chapter_data['name'],
+              description: chapter_data['description']
             )
+
+            chapter_data['scenes']&.each do |scene_data|
+              scene = chapter.scenes.create!(
+                name: scene_data['name'],
+                description: scene_data['description']
+              )
+
+              scene_data['beats']&.each do |beat_data|
+                scene.beats.create!(
+                  title: beat_data['title'],
+                  description: beat_data['description'],
+                  order_index: beat_data['order_index']
+                )
+              end
+            end
           end
         end
 
@@ -208,7 +232,7 @@ class UniversesController < ApplicationController
   end
 
   def universe_params
-    params.require(:universe).permit(:name)
+    params.require(:universe).permit(:name, :prompt)
   end
 
   def call_openrouter_api(user_prompt, model_choice)
@@ -376,13 +400,5 @@ class UniversesController < ApplicationController
   def sanitized_model_choice(raw_choice)
     return DEFAULT_MODEL unless raw_choice.present?
     MODEL_OPTIONS.key?(raw_choice) ? raw_choice : DEFAULT_MODEL
-  end
-
-  def build_regeneration_prompt(universe)
-    "Regenerate content for universe: #{universe.name}"
-  end
-
-  def call_openrouter_api_for_regeneration(context_prompt, model_choice, universe)
-    call_openrouter_api(context_prompt, model_choice)
   end
 end

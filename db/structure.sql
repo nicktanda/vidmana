@@ -8,7 +8,7 @@ CREATE INDEX "index_stories_on_user_id" ON "stories" ("user_id") /*application='
 CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "encrypted_password" varchar DEFAULT '' NOT NULL, "reset_password_token" varchar, "reset_password_sent_at" datetime(6), "remember_created_at" datetime(6), "name" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "provider" varchar /*application='Vidmana'*/, "uid" varchar /*application='Vidmana'*/, "avatar_url" varchar /*application='Vidmana'*/);
 CREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='Vidmana'*/;
 CREATE UNIQUE INDEX "index_users_on_reset_password_token" ON "users" ("reset_password_token") /*application='Vidmana'*/;
-CREATE TABLE IF NOT EXISTS "universes" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "user_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_dcb1aabc38"
+CREATE TABLE IF NOT EXISTS "universes" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "user_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "prompt" text /*application='Vidmana'*/, CONSTRAINT "fk_rails_dcb1aabc38"
 FOREIGN KEY ("user_id")
   REFERENCES "users" ("id")
 );
@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "sessions" ("id" integer PRIMARY KEY AUTOINCREMENT NO
 CREATE UNIQUE INDEX "index_sessions_on_session_id" ON "sessions" ("session_id") /*application='Vidmana'*/;
 CREATE INDEX "index_sessions_on_updated_at" ON "sessions" ("updated_at") /*application='Vidmana'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251019122547'),
 ('20251016092253'),
 ('20251015125406'),
 ('20250925094543'),
