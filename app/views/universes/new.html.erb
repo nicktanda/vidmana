@@ -28,8 +28,8 @@
         <!-- User Message -->
         <div class="flex gap-4 mb-8">
           <div class="flex-shrink-0">
-            <div class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+            <div class="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
               </svg>
             </div>
@@ -44,8 +44,8 @@
         <!-- Assistant Response -->
         <div class="flex gap-4 mb-8">
           <div class="flex-shrink-0">
-            <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 7a2 2 0 114 0 2 2 0 01-4 0zm2 9a5 5 0 01-4.546-2.916A7.98 7.98 0 0710 11a7.98 7.98 0 014.546 2.084A5 5 0 0110 16z"/>
               </svg>
             </div>
@@ -130,7 +130,7 @@
               <% end %>
 
               <!-- Action Buttons -->
-              <div class="flex justify-end gap-3 mt-6">
+              <div class="flex justify-end gap-3 mt-8">
                 <%= link_to "Start New", root_path, class: "px-4 py-2 text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors" %>
                 <%= form_with url: universes_path, local: true, class: "inline-block" do |form| %>
                   <%= form.hidden_field :name, value: @api_response['title'] %>
