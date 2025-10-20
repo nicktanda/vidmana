@@ -274,13 +274,13 @@ Devise.setup do |config|
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 
   # Google OAuth2 configuration
-  config.omniauth :google_oauth2, ENV['GOOGLE_CLIENT_ID'], ENV['GOOGLE_CLIENT_SECRET'], {
-    scope: 'email,profile',
-    prompt: 'select_account',
-    image_aspect_ratio: 'square',
+  config.omniauth :google_oauth2, ENV["GOOGLE_CLIENT_ID"], ENV["GOOGLE_CLIENT_SECRET"], {
+    scope: "email,profile",
+    prompt: "select_account",
+    image_aspect_ratio: "square",
     image_size: 200,
-    access_type: 'online',
-    redirect_uri: 'http://localhost:3000/users/auth/google_oauth2/callback',
+    access_type: "online",
+    redirect_uri: "https://vidmana.onrender.com/users/auth/google_oauth2/callback",
     skip_jwt: true
   }
 
