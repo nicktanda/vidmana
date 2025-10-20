@@ -23,14 +23,13 @@ module Vidmana
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
-    
-    # Use structure.sql instead of schema.rb
-    config.active_record.schema_format = :sql
+
+    config.active_record.schema_format = :ruby
 
     # Configure Propshaft to include Tailwind builds
     config.assets.paths << Rails.root.join("app/assets/builds")
 
     # Use database-backed session store for better performance and no cookie overflow
-    config.session_store :active_record_store, key: '_vidmana_session'
+    config.session_store :active_record_store, key: "_vidmana_session"
   end
 end
