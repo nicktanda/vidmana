@@ -8,7 +8,7 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 # Rails app lives here
 WORKDIR /rails
 
-# Runtime deps (add psql here so it's available at runtime for db:prepare)
+# Runtime deps (include psql so db:prepare can load structure.sql)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
       curl \
@@ -44,10 +44,8 @@ COPY . .
 # Precompile bootsnap
 RUN bundle exec bootsnap precompile app/ lib/
 
-# Precompile assets for production without requiring real master key
-ENV SECRET_KEY_BASE_DUMMY=1
-RUN ./bin/rails assets:precompile
-# (No need to unset; container process won't inherit this)
+# Precompile assets for production WITHOUT persisting any "secret" ENV
+RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 
 # ---------- Final stage ----------
 FROM base
@@ -65,7 +63,7 @@ USER 1000:1000
 # Rails 8 entrypoint runs db:prepare, etc.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Document the port (Render will set $PORT)
+# Document a port (Render sets $PORT; we bind to it below)
 EXPOSE 3000
 
 # Start Rails; bind to Render's assigned port
