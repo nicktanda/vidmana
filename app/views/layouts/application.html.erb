@@ -22,25 +22,77 @@
     <style>
       <%= File.read(Rails.root.join('app/assets/stylesheets/tailwind.css')).html_safe %>
     </style>
+
+    <!-- Theme styles -->
+    <style>
+      :root {
+        --bg-primary: #212121;
+        --bg-secondary: #171717;
+        --bg-tertiary: #2f2f2f;
+        --bg-hover: #2a2a2a;
+        --border-color: #374151;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --text-muted: #6b7280;
+      }
+
+      html.light {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --bg-tertiary: #f3f4f6;
+        --bg-hover: #e5e7eb;
+        --border-color: #e5e7eb;
+        --text-primary: #111827;
+        --text-secondary: #4b5563;
+        --text-muted: #9ca3af;
+      }
+
+      body.theme-dark {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      body.theme-light {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+      }
+
+      .sidebar-bg { background-color: var(--bg-secondary); }
+      .card-bg { background-color: var(--bg-tertiary); }
+      .hover-bg:hover { background-color: var(--bg-hover); }
+      .border-themed { border-color: var(--border-color); }
+      .text-themed { color: var(--text-primary); }
+      .text-themed-secondary { color: var(--text-secondary); }
+      .text-themed-muted { color: var(--text-muted); }
+    </style>
+
+    <!-- Theme initialization (before body renders to prevent flash) -->
+    <script>
+      (function() {
+        const theme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
+
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="h-full bg-[#212121] text-gray-100 m-0 p-0 overflow-hidden">
+  <body class="h-full m-0 p-0 overflow-hidden theme-dark" id="app-body">
     <% if user_signed_in? %>
       <!-- ChatGPT-like layout with sidebar -->
-      <div class="flex h-screen w-screen">
+      <div class="flex" style="height: 100vh; width: 100vw;">
         <!-- Sidebar -->
-        <div class="w-64 bg-[#171717] border-r border-gray-700 flex flex-col flex-shrink-0">
+        <div class="w-64 h-full sidebar-bg border-r border-themed flex flex-col flex-shrink-0">
           <!-- Logo/Brand -->
-          <div class="p-4 border-b border-gray-800">
+          <div class="p-4 border-b border-themed">
             <%= link_to authenticated_root_path, class: "flex items-center space-x-2 hover:opacity-80 transition-opacity" do %>
-              <span class="text-xl font-bold text-black">Vidmana</span>
+              <span class="text-xl font-bold text-themed">Vidmana</span>
             <% end %>
           </div>
 
           <!-- New Universe Button -->
           <div class="p-3">
-            <%= link_to authenticated_root_path, class: "flex items-center space-x-2 px-3 py-2 rounded-lg border border-gray-600 hover:bg-[#2a2a2a] transition-colors text-gray-200" do %>
+            <%= link_to authenticated_root_path, class: "flex items-center space-x-2 px-3 py-2 rounded-lg border border-themed hover-bg transition-colors text-themed-secondary" do %>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
@@ -54,20 +106,20 @@
             <% shared = current_user.shared_universes.order(created_at: :desc).limit(10) %>
             <% if owned.any? || shared.any? %>
               <div class="mb-2">
-                <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <div class="px-3 py-2 text-xs font-semibold text-themed-muted uppercase tracking-wider">
                   Universes
                 </div>
                 <% owned.each do |universe| %>
-                  <%= link_to universe, class: "block px-3 py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors text-gray-300 hover:text-white text-sm truncate" do %>
+                  <%= link_to universe, class: "block px-3 py-2 rounded-lg hover-bg transition-colors text-themed-secondary hover:text-themed text-sm truncate" do %>
                     <%= universe.name %>
                   <% end %>
                 <% end %>
                 <% if shared.any? %>
-                  <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-3">
+                  <div class="px-3 py-2 text-xs font-semibold text-themed-muted uppercase tracking-wider mt-3">
                     Shared With Me
                   </div>
                   <% shared.each do |universe| %>
-                    <%= link_to universe, class: "flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors text-gray-300 hover:text-white text-sm" do %>
+                    <%= link_to universe, class: "flex items-center gap-2 px-3 py-2 rounded-lg hover-bg transition-colors text-themed-secondary hover:text-themed text-sm" do %>
                       <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                       </svg>
@@ -80,10 +132,10 @@
 
             <!-- Tools Section -->
             <div class="mb-2">
-              <div class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <div class="px-3 py-2 text-xs font-semibold text-themed-muted uppercase tracking-wider">
                 Tools
               </div>
-              <%= link_to mana_prompts_path, class: "flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-[#2a2a2a] transition-colors text-gray-300 hover:text-white text-sm" do %>
+              <%= link_to mana_prompts_path, class: "flex items-center space-x-2 px-3 py-2 rounded-lg hover-bg transition-colors text-themed-secondary hover:text-themed text-sm" do %>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
@@ -92,23 +144,47 @@
             </div>
           </nav>
 
-          <!-- User Profile -->
-          <div class="p-4 border-t border-gray-800">
+          <!-- User Profile & Theme Toggle -->
+          <div class="p-4 border-t border-themed">
+            <!-- Theme Toggle -->
+            <button
+              id="theme-toggle"
+              class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover-bg transition-colors text-themed-secondary hover:text-themed text-sm mb-3"
+            >
+              <span class="flex items-center gap-2">
+                <!-- Sun icon (light mode) -->
+                <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <!-- Moon icon (dark mode) -->
+                <svg id="moon-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                </svg>
+                <span id="theme-label">Dark mode</span>
+              </span>
+              <!-- Toggle switch -->
+              <div class="relative">
+                <div id="toggle-track" class="w-10 h-6 bg-gray-600 rounded-full transition-colors"></div>
+                <div id="toggle-thumb" class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
+              </div>
+            </button>
+
+            <!-- User info -->
             <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-3">
+              <div class="flex items-center gap-4">
                 <% if current_user.avatar_url.present? %>
-                  <img src="<%= current_user.avatar_url %>" alt="<%= current_user.name %>" class="h-8 w-8 rounded-full">
+                  <img src="<%= current_user.avatar_url %>" alt="<%= current_user.name %>" class="h-8 w-8 rounded-full object-cover" referrerpolicy="no-referrer">
                 <% else %>
-                  <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">
+                  <div class="h-8 w-8 rounded-full bg-[#10a37f] flex items-center justify-center">
                     <span class="text-white text-sm font-medium">
                       <%= current_user.name.first.upcase %>
                     </span>
                   </div>
                 <% end %>
-                <span class="text-sm"><%= current_user.name %></span>
+                <span class="text-sm text-themed"><%= current_user.name %></span>
               </div>
               <%= button_to destroy_user_session_path, method: :delete, data: { turbo: false },
-                          class: "text-gray-400 hover:text-white" do %>
+                          class: "text-themed-muted hover:text-themed transition-colors" do %>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
                 </svg>
@@ -118,7 +194,7 @@
         </div>
 
         <!-- Main Content -->
-        <div style="flex: 1 1 0%; display: flex; flex-direction: column; overflow: hidden; min-height: 0;">
+        <div class="flex-1 h-full flex flex-col" style="background-color: var(--bg-primary);">
           <!-- Notifications -->
           <% if notice.present? %>
             <div class="flex-shrink-0 bg-green-900/50 border-b border-green-800 text-green-200 px-6 py-3">
@@ -131,8 +207,8 @@
             </div>
           <% end %>
 
-          <!-- Scrollable Content -->
-          <main style="flex: 1 1 0%; display: flex; flex-direction: column; overflow: hidden; min-height: 0;">
+          <!-- Scrollable Content - takes remaining height -->
+          <main class="flex-1 flex flex-col">
             <%= yield %>
           </main>
         </div>
@@ -154,5 +230,56 @@
         <%= yield %>
       </main>
     <% end %>
+
+    <!-- Theme toggle script -->
+    <script>
+      (function() {
+        const toggle = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        const themeLabel = document.getElementById('theme-label');
+        const toggleTrack = document.getElementById('toggle-track');
+        const toggleThumb = document.getElementById('toggle-thumb');
+        const body = document.getElementById('app-body');
+
+        function updateUI(theme) {
+          if (theme === 'light') {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+            themeLabel.textContent = 'Light mode';
+            toggleTrack.classList.remove('bg-gray-600');
+            toggleTrack.classList.add('bg-[#10a37f]');
+            toggleThumb.style.transform = 'translateX(16px)';
+            body.classList.remove('theme-dark');
+            body.classList.add('theme-light');
+          } else {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+            themeLabel.textContent = 'Dark mode';
+            toggleTrack.classList.remove('bg-[#10a37f]');
+            toggleTrack.classList.add('bg-gray-600');
+            toggleThumb.style.transform = 'translateX(0)';
+            body.classList.remove('theme-light');
+            body.classList.add('theme-dark');
+          }
+        }
+
+        // Initialize UI based on saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        updateUI(savedTheme);
+
+        if (toggle) {
+          toggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.classList.remove('light', 'dark');
+            document.documentElement.classList.add(newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateUI(newTheme);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

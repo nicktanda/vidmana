@@ -1,0 +1,36 @@
+<%= form_with model: Universe.new, url: universes_path, method: :post, local: true, data: { turbo: false }, id: "universe-form" do |form| %>
+  <div class="relative card-bg rounded-2xl border border-themed focus-within:border-gray-400 transition-colors">
+    <%= form.text_area :prompt,
+        placeholder: "Describe your universe...",
+        rows: 1,
+        class: "w-full px-4 py-3 pr-28 bg-transparent text-themed rounded-2xl focus:outline-none placeholder-gray-500 resize-none",
+        id: "prompt-field",
+        style: "min-height: 52px; max-height: 200px;" %>
+
+    <div class="absolute right-2 bottom-2 flex items-center gap-2">
+      <%= form.select :model,
+          options_for_select([
+            ['Grok 4', 'x-ai/grok-4-fast'],
+            ['Grok 3', 'x-ai/grok-3-mini'],
+            ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
+            ['Qwen 3', 'qwen/qwen3-coder']
+          ], @selected_model || @default_model),
+          {},
+          id: 'model-select',
+          class: 'px-3 py-2 text-sm border-0 rounded-lg hover-bg text-themed-secondary focus:outline-none focus:ring-1 focus:ring-gray-500 cursor-pointer',
+          style: 'background-color: var(--bg-hover);' %>
+
+      <button
+        type="submit"
+        id="submit-button"
+        class="bg-[#10a37f] hover:bg-[#0d8a6b] text-white rounded-full p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg id="submit-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+        </svg>
+        <div id="progress-indicator" class="hidden">
+          <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+        </div>
+      </button>
+    </div>
+  </div>
+<% end %>

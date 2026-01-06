@@ -280,7 +280,7 @@ Devise.setup do |config|
     image_aspect_ratio: "square",
     image_size: 200,
     access_type: "online",
-    redirect_uri: "https://vidmana.onrender.com/users/auth/google_oauth2/callback",
+    redirect_uri: Rails.env.production? ? "https://vidmana.onrender.com/users/auth/google_oauth2/callback" : "http://localhost:3000/users/auth/google_oauth2/callback",
     skip_jwt: true
   }
 
