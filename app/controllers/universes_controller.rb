@@ -14,6 +14,11 @@ class UniversesController < ApplicationController
   DEFAULT_MODEL = 'x-ai/grok-4-fast'.freeze
 
   def index
+    # Prevent browser from caching form state
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+
     # Get owned universes and shared universes
     @owned_universes = current_user.universes.order(created_at: :desc)
     @shared_universes = current_user.shared_universes.order(created_at: :desc)

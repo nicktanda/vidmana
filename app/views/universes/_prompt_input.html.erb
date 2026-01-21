@@ -1,4 +1,4 @@
-<%= form_with model: Universe.new, url: universes_path, method: :post, local: true, data: { turbo: false }, id: "universe-form" do |form| %>
+<%= form_with model: Universe.new, url: universes_path, method: :post, local: true, data: { turbo: false }, id: "universe-form", html: { autocomplete: "off" } do |form| %>
   <!-- Outer shaded container -->
   <div class="card-bg border border-themed" style="padding: 1.5rem; border-radius: 1rem;" id="input-container">
     <!-- Input area -->
@@ -7,7 +7,10 @@
           placeholder: "Describe your universe...",
           class: "w-full px-4 py-3 pr-14 bg-transparent text-themed rounded-2xl focus:outline-none placeholder-gray-500",
           id: "prompt-field",
-          autocomplete: "off" %>
+          value: "",
+          autocomplete: "new-password",
+          name: "universe[prompt]",
+          data: { turbo_permanent: false, turbo_cache: false } %>
 
       <button
         type="submit"
@@ -88,10 +91,54 @@
     const generateSpinner = document.getElementById('generate-spinner');
     const inputContainer = document.getElementById('input-container');
 
+    // Clear input field on page load (after form submission and redirect)
+    // Use aggressive approach to combat browser form restoration
+    function clearPromptField() {
+      const field = document.getElementById('prompt-field');
+      if (field) {
+        field.value = '';
+        field.setAttribute('value', '');
+      }
+    }
+
+    // Use requestAnimationFrame to ensure we clear AFTER browser restoration
+    function aggressiveClear() {
+      clearPromptField();
+      requestAnimationFrame(clearPromptField);
+      setTimeout(clearPromptField, 0);
+      setTimeout(clearPromptField, 50);
+      setTimeout(clearPromptField, 100);
+      setTimeout(clearPromptField, 200);
+      setTimeout(clearPromptField, 500);
+    }
+
+    // Clear on various events to catch all scenarios
+    aggressiveClear();
+    document.addEventListener('DOMContentLoaded', aggressiveClear);
+    document.addEventListener('turbo:load', aggressiveClear);
+    document.addEventListener('turbo:render', aggressiveClear);
+
+    // pageshow fires when page is restored from bfcache
+    window.addEventListener('pageshow', function(event) {
+      aggressiveClear();
+      // If restored from bfcache, be extra aggressive
+      if (event.persisted) {
+        setTimeout(aggressiveClear, 0);
+        setTimeout(aggressiveClear, 100);
+      }
+    });
+
     if (form) {
       form.addEventListener('submit', function(e) {
         if (promptField && promptField.value.trim()) {
           const userPrompt = promptField.value.trim();
+
+          // Clear the input immediately after capturing value
+          // The value is already in the form data at this point
+          setTimeout(function() {
+            promptField.value = '';
+            promptField.placeholder = 'Generating your universe...';
+          }, 10);
 
           // Make input read-only (not disabled, so value still submits)
           promptField.readOnly = true;
