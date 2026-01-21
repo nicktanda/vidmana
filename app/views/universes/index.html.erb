@@ -1,137 +1,208 @@
 <% if @user_prompt && @api_response %>
+<%
+  # Extract beats from chapters/scenes structure
+  preview_beats = []
+  beat_index = 0
+  @api_response['chapters']&.each do |chapter|
+    chapter['scenes']&.each do |scene|
+      if scene['beats']&.any?
+        scene['beats'].each do |beat|
+          beat_index += 1
+          preview_beats << { 'index' => beat_index, 'title' => beat['title'], 'description' => beat['description'] }
+        end
+      elsif scene['description'].present?
+        beat_index += 1
+        preview_beats << { 'index' => beat_index, 'title' => scene['name'], 'description' => scene['description'] }
+      end
+    end
+  end
+%>
 <div class="overflow-y-auto" id="conversation-scroll" style="height: calc(100vh - 100px);">
-  <div class="max-w-3xl mx-auto px-6 py-8">
-      <!-- User Message -->
-      <div class="flex gap-4 mb-8">
-        <div class="flex-shrink-0 w-8 h-8">
-          <% if current_user.avatar_url.present? %>
-            <img src="<%= current_user.avatar_url %>" alt="<%= current_user.name %>" class="w-8 h-8 rounded-full object-cover">
-          <% else %>
-            <div class="w-8 h-8 card-bg rounded-full flex items-center justify-center">
-              <span class="text-themed text-xs font-medium">
-                <%= current_user.name.first.upcase %>
-              </span>
+  <div class="max-w-4xl mx-auto px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900"><%= @api_response['title'] %></h1>
+      <p class="text-gray-400 mt-2"><%= @api_response['description'] %></p>
+    </div>
+
+    <!-- Story Beats Section -->
+    <% if preview_beats.any? %>
+      <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Story Beats
+        </h2>
+        <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <% preview_beats.each do |beat| %>
+            <div class="flex-shrink-0 w-64 bg-[#252525] rounded-lg border border-gray-600 p-4 cursor-pointer hover:border-green-600 transition-colors preview-beat-card group"
+                 data-beat-title="<%= h beat['title'] %>"
+                 data-beat-description="<%= h beat['description'] %>"
+                 data-beat-index="<%= beat['index'] %>">
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                  <div class="w-8 h-8 bg-green-900/50 rounded-full flex items-center justify-center border border-green-700">
+                    <span class="text-sm font-semibold text-green-400"><%= beat['index'] %></span>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="font-medium text-gray-100 mb-1"><%= beat['title'] %></h4>
+                  <p class="text-sm text-gray-400 line-clamp-4"><%= beat['description'] %></p>
+                </div>
+              </div>
+              <p class="mt-2 text-xs text-gray-500 group-hover:text-green-400 transition-colors">Read more...</p>
             </div>
           <% end %>
         </div>
-        <div class="flex-1 pt-1">
-          <p class="text-themed"><%= @user_prompt %></p>
-        </div>
-      </div>
 
-      <!-- Assistant Response -->
-      <div class="flex gap-4 mb-8">
-        <div class="flex-shrink-0">
-          <div class="w-8 h-8 bg-[#10a37f] rounded-full flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-        </div>
-        <div class="flex-1 pt-1 space-y-6">
-          <p class="text-themed">
-            I've created a universe based on your prompt. Here's what I generated:
-          </p>
-
-          <!-- Title Card -->
-          <div class="card-bg rounded-2xl p-5 border border-themed">
-            <h3 class="text-xl font-semibold text-themed mb-2"><%= @api_response['title'] %></h3>
-            <p class="text-themed-secondary text-sm"><%= @api_response['description'] %></p>
-          </div>
-
-          <!-- Characters -->
-          <% if @api_response['characters'].present? %>
-            <div class="card-bg rounded-2xl p-5 border border-themed">
-              <h4 class="text-sm font-medium text-themed-muted uppercase tracking-wide mb-4">Characters</h4>
-              <div class="space-y-3">
-                <% @api_response['characters'].each do |character| %>
-                  <div class="flex gap-3">
-                    <div class="w-1 bg-[#10a37f] rounded-full flex-shrink-0"></div>
-                    <div>
-                      <p class="font-medium text-themed"><%= character['name'] %></p>
-                      <p class="text-sm text-themed-secondary"><%= character['description'] %></p>
-                    </div>
-                  </div>
-                <% end %>
+        <!-- Beat Detail Panel -->
+        <div id="preview-beat-detail" class="hidden mt-4 p-4 bg-[#252525] rounded-lg border border-green-600">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+              <div class="w-10 h-10 bg-green-900/50 rounded-full flex items-center justify-center border border-green-700">
+                <span id="preview-beat-detail-index" class="text-lg font-semibold text-green-400"></span>
               </div>
             </div>
-          <% end %>
-
-          <!-- Locations -->
-          <% if @api_response['locations'].present? %>
-            <div class="card-bg rounded-2xl p-5 border border-themed">
-              <h4 class="text-sm font-medium text-themed-muted uppercase tracking-wide mb-4">Locations</h4>
-              <div class="space-y-3">
-                <% @api_response['locations'].each do |location| %>
-                  <div class="flex gap-3">
-                    <div class="w-1 bg-blue-500 rounded-full flex-shrink-0"></div>
-                    <div>
-                      <p class="font-medium text-themed"><%= location['name'] %></p>
-                      <p class="text-sm text-themed-secondary"><%= location['description'] %></p>
-                    </div>
-                  </div>
-                <% end %>
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-2">
+                <h3 id="preview-beat-detail-title" class="text-lg font-semibold text-gray-100"></h3>
+                <button type="button" id="close-preview-beat-detail" class="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
               </div>
+              <p id="preview-beat-detail-description" class="text-gray-300 leading-relaxed whitespace-pre-wrap"></p>
             </div>
-          <% end %>
-
-          <!-- Story Structure -->
-          <% if @api_response['chapters'].present? %>
-            <div class="card-bg rounded-2xl p-5 border border-themed">
-              <h4 class="text-sm font-medium text-themed-muted uppercase tracking-wide mb-4">Story Structure</h4>
-              <div class="space-y-4">
-                <% @api_response['chapters'].each_with_index do |chapter, chapter_index| %>
-                  <div>
-                    <h5 class="font-medium text-themed mb-2"><%= chapter['name'] %></h5>
-                    <% if chapter['description'].present? %>
-                      <p class="text-sm text-themed-secondary mb-3"><%= chapter['description'] %></p>
-                    <% end %>
-
-                    <% chapter['scenes']&.each do |scene| %>
-                      <div class="ml-4 mb-3">
-                        <p class="text-sm font-medium text-themed-secondary mb-1"><%= scene['name'] %></p>
-                        <% if scene['description'].present? %>
-                          <p class="text-sm text-themed-muted mb-2"><%= scene['description'] %></p>
-                        <% end %>
-
-                        <% if scene['beats']&.any? %>
-                          <div class="ml-4 space-y-2">
-                            <% scene['beats'].each_with_index do |beat, beat_index| %>
-                              <div class="flex gap-2 text-sm">
-                                <span class="text-themed-muted flex-shrink-0"><%= beat_index + 1 %>.</span>
-                                <div>
-                                  <span class="text-themed-secondary"><%= beat['title'] %></span>
-                                  <% if beat['description'].present? %>
-                                    <span class="text-themed-muted"> - <%= beat['description'].truncate(150) %></span>
-                                  <% end %>
-                                </div>
-                              </div>
-                            <% end %>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-3 pt-2">
-            <%= link_to authenticated_root_path, class: "px-4 py-2 text-sm text-themed-secondary card-bg border border-themed rounded-full hover-bg transition-colors" do %>
-              New Universe
-            <% end %>
-            <%= form_with url: universes_path, method: :post, local: true, class: "inline-block" do |form| %>
-              <%= form.hidden_field :name, value: @api_response['title'] %>
-              <%= form.hidden_field :prompt, value: @api_response['prompt'] %>
-              <%= form.hidden_field :full_data, value: @api_response.to_json %>
-              <%= form.hidden_field :save_universe, value: true %>
-              <%= form.submit "Save Universe", class: "px-4 py-2 text-sm bg-[#10a37f] hover:bg-[#0d8a6b] text-white rounded-full transition-colors cursor-pointer font-medium" %>
-            <% end %>
           </div>
         </div>
       </div>
+    <% end %>
+
+    <!-- Characters Section -->
+    <% if @api_response['characters'].present? %>
+      <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          Characters
+        </h2>
+        <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <% @api_response['characters'].each do |character| %>
+            <div class="flex-shrink-0 w-64 bg-[#252525] rounded-lg p-4 border border-gray-600 cursor-pointer hover:border-purple-600 transition-colors preview-character-card group"
+                 data-name="<%= h character['name'] %>"
+                 data-role="<%= h character['role'] %>"
+                 data-description="<%= h character['description'] %>">
+              <h3 class="font-medium text-gray-100 mb-1"><%= character['name'] %></h3>
+              <% if character['role'].present? %>
+                <span class="inline-block px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs rounded mb-2"><%= character['role'] %></span>
+              <% end %>
+              <p class="text-sm text-gray-400 line-clamp-4"><%= character['description'] %></p>
+              <p class="mt-2 text-xs text-gray-500 group-hover:text-purple-400 transition-colors">Read more...</p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Character Detail Panel -->
+        <div id="preview-character-detail" class="hidden mt-4 p-4 bg-[#252525] rounded-lg border border-purple-600">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+              <div class="w-10 h-10 bg-purple-900/50 rounded-full flex items-center justify-center border border-purple-700">
+                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <h3 id="preview-character-detail-name" class="text-lg font-semibold text-gray-100"></h3>
+                  <span id="preview-character-detail-role" class="inline-block px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs rounded mt-1"></span>
+                </div>
+                <button type="button" id="close-preview-character-detail" class="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <p id="preview-character-detail-description" class="text-gray-300 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Locations Section -->
+    <% if @api_response['locations'].present? %>
+      <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Locations
+        </h2>
+        <div class="flex gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+          <% @api_response['locations'].each do |location| %>
+            <div class="flex-shrink-0 w-64 bg-[#252525] rounded-lg p-4 border border-gray-600 cursor-pointer hover:border-blue-600 transition-colors preview-location-card group"
+                 data-name="<%= h location['name'] %>"
+                 data-type="<%= h location['location_type'] %>"
+                 data-description="<%= h location['description'] %>">
+              <h3 class="font-medium text-gray-100 mb-1"><%= location['name'] %></h3>
+              <% if location['location_type'].present? %>
+                <span class="inline-block px-2 py-0.5 bg-blue-900/50 text-blue-300 text-xs rounded mb-2"><%= location['location_type'] %></span>
+              <% end %>
+              <p class="text-sm text-gray-400 line-clamp-4"><%= location['description'] %></p>
+              <p class="mt-2 text-xs text-gray-500 group-hover:text-blue-400 transition-colors">Read more...</p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Location Detail Panel -->
+        <div id="preview-location-detail" class="hidden mt-4 p-4 bg-[#252525] rounded-lg border border-blue-600">
+          <div class="flex items-start gap-4">
+            <div class="flex-shrink-0">
+              <div class="w-10 h-10 bg-blue-900/50 rounded-full flex items-center justify-center border border-blue-700">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <h3 id="preview-location-detail-name" class="text-lg font-semibold text-gray-100"></h3>
+                  <span id="preview-location-detail-type" class="inline-block px-2 py-0.5 bg-blue-900/50 text-blue-300 text-xs rounded mt-1"></span>
+                </div>
+                <button type="button" id="close-preview-location-detail" class="p-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <p id="preview-location-detail-description" class="text-gray-300 leading-relaxed whitespace-pre-wrap"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-3 mt-6">
+      <%= link_to authenticated_root_path, class: "px-4 py-2 text-sm text-themed-secondary card-bg border border-themed rounded-full hover-bg transition-colors" do %>
+        New Universe
+      <% end %>
+      <%= form_with url: universes_path, method: :post, local: true, class: "inline-block" do |form| %>
+        <%= form.hidden_field :name, value: @api_response['title'] %>
+        <%= form.hidden_field :prompt, value: @api_response['prompt'] %>
+        <%= form.hidden_field :full_data, value: @api_response.to_json %>
+        <%= form.hidden_field :save_universe, value: true %>
+        <%= form.submit "Save Universe", class: "px-4 py-2 text-sm bg-[#10a37f] hover:bg-[#0d8a6b] text-white rounded-full transition-colors cursor-pointer font-medium" %>
+      <% end %>
+    </div>
   </div>
 </div>
 
@@ -165,13 +236,105 @@
 
 <% if @user_prompt && @api_response %>
 <script>
-  // Auto-scroll to bottom to show latest response (like a chat app)
-  document.addEventListener('DOMContentLoaded', function() {
-    const scrollContainer = document.getElementById('conversation-scroll');
-    if (scrollContainer) {
-      // Start at the top so user sees their message first
-      scrollContainer.scrollTop = 0;
+  function initPreviewDetailPanels() {
+    // Beat detail panel
+    const beatDetail = document.getElementById('preview-beat-detail');
+    if (beatDetail) {
+      document.querySelectorAll('.preview-beat-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.getElementById('preview-beat-detail-title').textContent = this.dataset.beatTitle;
+          document.getElementById('preview-beat-detail-description').textContent = this.dataset.beatDescription;
+          document.getElementById('preview-beat-detail-index').textContent = this.dataset.beatIndex;
+          beatDetail.classList.remove('hidden');
+        });
+      });
+
+      document.getElementById('close-preview-beat-detail')?.addEventListener('click', function() {
+        beatDetail.classList.add('hidden');
+      });
     }
-  });
+
+    // Character detail panel
+    const characterDetail = document.getElementById('preview-character-detail');
+    if (characterDetail) {
+      document.querySelectorAll('.preview-character-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.getElementById('preview-character-detail-name').textContent = this.dataset.name;
+          document.getElementById('preview-character-detail-description').textContent = this.dataset.description;
+          const roleEl = document.getElementById('preview-character-detail-role');
+          if (this.dataset.role) {
+            roleEl.textContent = this.dataset.role;
+            roleEl.classList.remove('hidden');
+          } else {
+            roleEl.classList.add('hidden');
+          }
+          characterDetail.classList.remove('hidden');
+        });
+      });
+
+      document.getElementById('close-preview-character-detail')?.addEventListener('click', function() {
+        characterDetail.classList.add('hidden');
+      });
+    }
+
+    // Location detail panel
+    const locationDetail = document.getElementById('preview-location-detail');
+    if (locationDetail) {
+      document.querySelectorAll('.preview-location-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.getElementById('preview-location-detail-name').textContent = this.dataset.name;
+          document.getElementById('preview-location-detail-description').textContent = this.dataset.description;
+          const typeEl = document.getElementById('preview-location-detail-type');
+          if (this.dataset.type) {
+            typeEl.textContent = this.dataset.type;
+            typeEl.classList.remove('hidden');
+          } else {
+            typeEl.classList.add('hidden');
+          }
+          locationDetail.classList.remove('hidden');
+        });
+      });
+
+      document.getElementById('close-preview-location-detail')?.addEventListener('click', function() {
+        locationDetail.classList.add('hidden');
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initPreviewDetailPanels);
+  document.addEventListener('turbo:load', initPreviewDetailPanels);
 </script>
+
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #4b5563;
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280;
+  }
+</style>
 <% end %>
