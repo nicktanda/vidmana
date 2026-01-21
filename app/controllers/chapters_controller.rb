@@ -1,6 +1,7 @@
 class ChaptersController < ApplicationController
   before_action :authenticate_user!
   before_action :set_universe
+  before_action :authorize_edit!
   before_action :set_chapter, only: [:show, :edit, :update, :destroy]
 
   def index
@@ -18,7 +19,7 @@ class ChaptersController < ApplicationController
     @chapter = @universe.chapters.build(chapter_params)
 
     if @chapter.save
-      redirect_to universe_chapter_path(@universe, @chapter), notice: 'Chapter was successfully created.'
+      redirect_to edit_universe_path(@universe), notice: 'Chapter was successfully created.'
     else
       render :new
     end
@@ -29,7 +30,7 @@ class ChaptersController < ApplicationController
 
   def update
     if @chapter.update(chapter_params)
-      redirect_to universe_chapter_path(@universe, @chapter), notice: 'Chapter was successfully updated.'
+      redirect_to edit_universe_path(@universe), notice: 'Chapter was successfully updated.'
     else
       render :edit
     end
@@ -37,13 +38,19 @@ class ChaptersController < ApplicationController
 
   def destroy
     @chapter.destroy
-    redirect_to universe_chapters_path(@universe), notice: 'Chapter was successfully deleted.'
+    redirect_to edit_universe_path(@universe), notice: 'Chapter was successfully deleted.'
   end
 
   private
 
   def set_universe
-    @universe = current_user.universes.find(params[:universe_id])
+    @universe = Universe.find(params[:universe_id])
+  end
+
+  def authorize_edit!
+    unless @universe.can_edit?(current_user)
+      redirect_to @universe, alert: "You don't have permission to edit this universe."
+    end
   end
 
   def set_chapter

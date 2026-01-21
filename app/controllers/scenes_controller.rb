@@ -1,6 +1,7 @@
 class ScenesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_chapter
+  before_action :authorize_edit!
   before_action :set_scene, only: [:show, :edit, :update, :destroy]
 
   def index
@@ -18,7 +19,7 @@ class ScenesController < ApplicationController
     @scene = @chapter.scenes.build(scene_params)
 
     if @scene.save
-      redirect_to universe_chapter_scene_path(@chapter.universe, @chapter, @scene), notice: 'Scene was successfully created.'
+      redirect_to edit_universe_path(@universe), notice: 'Scene was successfully created.'
     else
       render :new
     end
@@ -29,7 +30,7 @@ class ScenesController < ApplicationController
 
   def update
     if @scene.update(scene_params)
-      redirect_to universe_chapter_scene_path(@chapter.universe, @chapter, @scene), notice: 'Scene was successfully updated.'
+      redirect_to edit_universe_path(@universe), notice: 'Scene was successfully updated.'
     else
       render :edit
     end
@@ -37,7 +38,7 @@ class ScenesController < ApplicationController
 
   def destroy
     @scene.destroy
-    redirect_to universe_chapter_scenes_path(@chapter.universe, @chapter), notice: 'Scene was successfully deleted.'
+    redirect_to edit_universe_path(@universe), notice: 'Scene was successfully deleted.'
   end
 
   private
@@ -45,6 +46,12 @@ class ScenesController < ApplicationController
   def set_chapter
     @chapter = Chapter.find(params[:chapter_id])
     @universe = @chapter.universe
+  end
+
+  def authorize_edit!
+    unless @universe.can_edit?(current_user)
+      redirect_to @universe, alert: "You don't have permission to edit this universe."
+    end
   end
 
   def set_scene

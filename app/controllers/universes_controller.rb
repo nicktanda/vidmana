@@ -77,24 +77,34 @@ class UniversesController < ApplicationController
           )
         end
 
-        # Create chapters, scenes, and beats
+        # Create chapters
         full_data['chapters']&.each do |chapter_data|
-          chapter = @universe.chapters.create!(
+          @universe.chapters.create!(
             name: chapter_data['name'],
             description: chapter_data['description']
           )
+        end
 
+        # Create beats directly on universe (extract from scenes in API response)
+        beat_order = 0
+        full_data['chapters']&.each do |chapter_data|
           chapter_data['scenes']&.each do |scene_data|
-            scene = chapter.scenes.create!(
-              name: scene_data['name'],
-              description: scene_data['description']
-            )
-
+            # If scene has beats, create them on the universe
             scene_data['beats']&.each do |beat_data|
-              scene.beats.create!(
+              beat_order += 1
+              @universe.beats.create!(
                 title: beat_data['title'],
                 description: beat_data['description'],
-                order_index: beat_data['order_index']
+                order_index: beat_data['order_index'] || beat_order
+              )
+            end
+            # If no beats but scene has content, create a beat from the scene
+            if scene_data['beats'].blank? && scene_data['description'].present?
+              beat_order += 1
+              @universe.beats.create!(
+                title: scene_data['name'],
+                description: scene_data['description'],
+                order_index: beat_order
               )
             end
           end
@@ -176,6 +186,7 @@ class UniversesController < ApplicationController
           @universe.characters.destroy_all
           @universe.locations.destroy_all
           @universe.chapters.destroy_all
+          @universe.beats.destroy_all
 
           # Create characters
           api_response['characters']&.each do |char_data|
@@ -195,24 +206,34 @@ class UniversesController < ApplicationController
             )
           end
 
-          # Create chapters, scenes, and beats
+          # Create chapters
           api_response['chapters']&.each do |chapter_data|
-            chapter = @universe.chapters.create!(
+            @universe.chapters.create!(
               name: chapter_data['name'],
               description: chapter_data['description']
             )
+          end
 
+          # Create beats directly on universe (extract from scenes in API response)
+          beat_order = 0
+          api_response['chapters']&.each do |chapter_data|
             chapter_data['scenes']&.each do |scene_data|
-              scene = chapter.scenes.create!(
-                name: scene_data['name'],
-                description: scene_data['description']
-              )
-
+              # If scene has beats, create them on the universe
               scene_data['beats']&.each do |beat_data|
-                scene.beats.create!(
+                beat_order += 1
+                @universe.beats.create!(
                   title: beat_data['title'],
                   description: beat_data['description'],
-                  order_index: beat_data['order_index']
+                  order_index: beat_data['order_index'] || beat_order
+                )
+              end
+              # If no beats but scene has content, create a beat from the scene
+              if scene_data['beats'].blank? && scene_data['description'].present?
+                beat_order += 1
+                @universe.beats.create!(
+                  title: scene_data['name'],
+                  description: scene_data['description'],
+                  order_index: beat_order
                 )
               end
             end
@@ -239,7 +260,14 @@ class UniversesController < ApplicationController
 
   def set_universe
     # Find universe that user owns or has been shared with
-    @universe = Universe.includes(universe_shares: :user).find(params[:id])
+    # Eager load associations to avoid N+1 queries
+    @universe = Universe.includes(
+      :characters,
+      :locations,
+      :beats,
+      :chapters,
+      universe_shares: :user
+    ).find(params[:id])
   end
 
   def authorize_view!

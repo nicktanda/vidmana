@@ -1,23 +1,22 @@
 <%= form_with model: Universe.new, url: universes_path, method: :post, local: true, data: { turbo: false }, id: "universe-form" do |form| %>
   <!-- Outer shaded container -->
-  <div class="card-bg border border-themed" style="padding: 1.5rem; border-radius: 1rem;">
+  <div class="card-bg border border-themed" style="padding: 1.5rem; border-radius: 1rem;" id="input-container">
     <!-- Input area -->
     <div class="relative" style="background-color: var(--bg-hover); border-radius: 1rem;">
-      <%= form.text_area :prompt,
+      <%= form.text_field :prompt,
           placeholder: "Describe your universe...",
-          rows: 1,
-          class: "w-full px-4 py-3 pr-14 bg-transparent text-themed rounded-2xl focus:outline-none placeholder-gray-500 resize-none",
+          class: "w-full px-4 py-3 pr-14 bg-transparent text-themed rounded-2xl focus:outline-none placeholder-gray-500",
           id: "prompt-field",
-          style: "min-height: 52px; max-height: 200px;" %>
+          autocomplete: "off" %>
 
       <button
         type="submit"
         id="submit-button"
-        class="absolute right-2 bottom-2 bg-[#10a37f] hover:bg-[#0d8a6b] text-white rounded-full p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        class="absolute right-2 top-1/2 -translate-y-1/2 bg-[#10a37f] hover:bg-[#0d8a6b] text-white rounded-full p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
         <svg id="submit-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
         </svg>
-        <div id="progress-indicator" class="hidden">
+        <div id="submit-spinner" class="hidden">
           <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
         </div>
       </button>
@@ -40,12 +39,171 @@
       <button
         type="submit"
         id="generate-button"
-        class="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         style="background-color: #1a1a1a;"
         onmouseover="this.style.backgroundColor='#2a2a2a'"
         onmouseout="this.style.backgroundColor='#1a1a1a'">
-        Generate
+        <span id="generate-text">Generate</span>
+        <div id="generate-spinner" class="hidden">
+          <div class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+        </div>
       </button>
     </div>
   </div>
+
 <% end %>
+
+<style>
+  @keyframes typing-dot {
+    0%, 60%, 100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+  }
+  .typing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: currentColor;
+    border-radius: 50%;
+    animation: typing-dot 1.4s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(1) { animation-delay: 0s; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+</style>
+
+<script>
+  (function() {
+    const form = document.getElementById('universe-form');
+    const promptField = document.getElementById('prompt-field');
+    const submitButton = document.getElementById('submit-button');
+    const submitIcon = document.getElementById('submit-icon');
+    const submitSpinner = document.getElementById('submit-spinner');
+    const generateButton = document.getElementById('generate-button');
+    const generateText = document.getElementById('generate-text');
+    const generateSpinner = document.getElementById('generate-spinner');
+    const inputContainer = document.getElementById('input-container');
+
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        if (promptField && promptField.value.trim()) {
+          const userPrompt = promptField.value.trim();
+
+          // Make input read-only (not disabled, so value still submits)
+          promptField.readOnly = true;
+          promptField.classList.add('opacity-50');
+          submitButton.disabled = true;
+          generateButton.disabled = true;
+
+          // Show spinners
+          submitIcon.classList.add('hidden');
+          submitSpinner.classList.remove('hidden');
+          generateText.textContent = 'Generating...';
+          generateSpinner.classList.remove('hidden');
+
+          // Check if we're in empty state (centered layout)
+          const emptyStateContainer = document.querySelector('.flex-1.flex.items-center.justify-center');
+
+          if (emptyStateContainer) {
+            // We're in empty state - transform to conversation layout
+            const mainContainer = emptyStateContainer.parentElement;
+
+            // Get the form and move it to body first (before removing its parent)
+            const formElement = document.getElementById('universe-form');
+            document.body.appendChild(formElement);
+
+            // Calculate sidebar width (256px = w-64)
+            const sidebarWidth = 256;
+
+            // Apply fixed positioning to keep input at bottom during transition
+            formElement.style.position = 'fixed';
+            formElement.style.bottom = '16px';
+            formElement.style.left = (sidebarWidth + 16) + 'px';
+            formElement.style.right = '16px';
+            formElement.style.maxWidth = '768px';
+            formElement.style.margin = '0 auto';
+            formElement.style.zIndex = '100';
+
+            // Create conversation content (messages only, input is fixed)
+            const conversationHTML = `
+              <div class="flex-1 overflow-y-auto pb-24" id="conversation-scroll">
+                <div class="max-w-3xl mx-auto px-6 py-8">
+                  <!-- User Message -->
+                  <div class="flex gap-4 mb-8">
+                    <div class="flex-shrink-0 w-8 h-8">
+                      <div class="w-8 h-8 card-bg rounded-full flex items-center justify-center">
+                        <span class="text-themed text-xs font-medium">U</span>
+                      </div>
+                    </div>
+                    <div class="flex-1 pt-1">
+                      <p class="text-themed">${userPrompt.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                    </div>
+                  </div>
+
+                  <!-- Assistant Typing Indicator -->
+                  <div class="flex gap-4 mb-8" id="typing-indicator">
+                    <div class="flex-shrink-0">
+                      <div class="w-8 h-8 bg-[#10a37f] rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <div class="flex-1 pt-2">
+                      <div class="flex gap-1 text-themed-secondary">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            // Remove empty state and insert conversation
+            emptyStateContainer.remove();
+            mainContainer.insertAdjacentHTML('beforeend', conversationHTML);
+          } else {
+            // Already in conversation mode - just add the typing indicator
+            const conversationArea = document.querySelector('#conversation-scroll .max-w-3xl');
+            if (conversationArea) {
+              const typingHTML = `
+                <div class="flex gap-4 mb-8" id="typing-indicator">
+                  <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-[#10a37f] rounded-full flex items-center justify-center">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="flex-1 pt-2">
+                    <div class="flex gap-1 text-themed-secondary">
+                      <div class="typing-dot"></div>
+                      <div class="typing-dot"></div>
+                      <div class="typing-dot"></div>
+                    </div>
+                  </div>
+                </div>
+              `;
+              conversationArea.insertAdjacentHTML('beforeend', typingHTML);
+
+              // Scroll to show the typing indicator
+              const scrollContainer = document.getElementById('conversation-scroll');
+              if (scrollContainer) {
+                scrollContainer.scrollTo({
+                  top: scrollContainer.scrollHeight,
+                  behavior: 'smooth'
+                });
+              }
+            }
+          }
+        }
+      });
+    }
+  })();
+</script>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_19_125956) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_21_104419) do
   create_table "beats", force: :cascade do |t|
     t.string "title", null: false
     t.text "description", null: false
@@ -18,7 +18,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_125956) do
     t.datetime "updated_at", null: false
     t.integer "order_index"
     t.integer "scene_id"
+    t.integer "universe_id"
     t.index ["scene_id"], name: "index_beats_on_scene_id"
+    t.index ["universe_id"], name: "index_beats_on_universe_id"
   end
 
   create_table "chapters", force: :cascade do |t|
@@ -123,6 +125,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_19_125956) do
   end
 
   add_foreign_key "beats", "scenes"
+  add_foreign_key "beats", "universes"
   add_foreign_key "chapters", "universes"
   add_foreign_key "characters", "universes"
   add_foreign_key "locations", "universes"

@@ -1,8 +1,6 @@
-<div class="flex-1 flex flex-col">
 <% if @user_prompt && @api_response %>
-  <!-- Conversation mode: scrollable content with pinned input at bottom -->
-  <div class="flex-1 overflow-y-auto">
-    <div class="max-w-3xl mx-auto px-6 py-8">
+<div class="overflow-y-auto" id="conversation-scroll" style="height: calc(100vh - 100px);">
+  <div class="max-w-3xl mx-auto px-6 py-8">
       <!-- User Message -->
       <div class="flex gap-4 mb-8">
         <div class="flex-shrink-0 w-8 h-8">
@@ -30,7 +28,7 @@
             </svg>
           </div>
         </div>
-        <div class="flex-1 pt-1 space-y-4">
+        <div class="flex-1 pt-1 space-y-6">
           <p class="text-themed">
             I've created a universe based on your prompt. Here's what I generated:
           </p>
@@ -134,16 +132,15 @@
           </div>
         </div>
       </div>
-    </div>
   </div>
+</div>
 
-  <!-- Pinned input at bottom for conversation mode -->
-  <div class="flex-shrink-0 p-4">
-    <div class="max-w-3xl mx-auto">
-      <%= render partial: 'universes/prompt_input' %>
-    </div>
+<!-- Fixed input at bottom for conversation mode -->
+<div class="fixed bottom-0 right-0 p-4" style="background-color: var(--bg-primary); left: 256px;">
+  <div class="max-w-3xl mx-auto">
+    <%= render partial: 'universes/prompt_input' %>
   </div>
-
+</div>
 <% else %>
   <!-- Empty state: everything centered -->
   <div class="flex-1 flex items-center justify-center px-6">
@@ -165,34 +162,16 @@
     </div>
   </div>
 <% end %>
-</div>
 
+<% if @user_prompt && @api_response %>
 <script>
-  (function() {
-    const form = document.getElementById('universe-form');
-    const submitButton = document.getElementById('submit-button');
-    const submitIcon = document.getElementById('submit-icon');
-    const progressIndicator = document.getElementById('progress-indicator');
-    const promptField = document.getElementById('prompt-field');
-
-    // Auto-resize textarea
-    if (promptField) {
-      promptField.addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
-      });
+  // Auto-scroll to bottom to show latest response (like a chat app)
+  document.addEventListener('DOMContentLoaded', function() {
+    const scrollContainer = document.getElementById('conversation-scroll');
+    if (scrollContainer) {
+      // Start at the top so user sees their message first
+      scrollContainer.scrollTop = 0;
     }
-
-    if (form) {
-      form.addEventListener('submit', function(e) {
-        if (promptField && promptField.value.trim()) {
-          submitIcon.classList.add('hidden');
-          progressIndicator.classList.remove('hidden');
-          submitButton.disabled = true;
-          promptField.readOnly = true;
-          promptField.classList.add('opacity-50');
-        }
-      });
-    }
-  })();
+  });
 </script>
+<% end %>

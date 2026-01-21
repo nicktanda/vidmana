@@ -1,4 +1,14 @@
-<div class="max-w-5xl mx-auto px-6 py-8">
+<style>
+  .edit-page-styles button svg { pointer-events: none; }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
+
+<div class="max-w-5xl mx-auto px-6 py-8 edit-page-styles" data-controller="edit-toggle">
   <!-- Header -->
   <div class="mb-8">
     <div class="flex items-center justify-between mb-4">
@@ -114,96 +124,313 @@
   </script>
 
   <!-- Characters Section -->
-  <% if @universe.characters.any? %>
-    <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
         <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
         </svg>
         Characters
       </h2>
+      <button type="button" data-action="click->edit-toggle#toggleAdd" data-form-id="new-character-form" class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add
+      </button>
+    </div>
+
+    <!-- New Character Form (hidden by default) -->
+    <div id="new-character-form" class="hidden mb-4">
+      <%= form_with url: universe_characters_path(@universe), method: :post, scope: :character, data: { turbo: false }, class: "bg-[#1a1a1a] rounded-lg p-4 border border-purple-600" do |form| %>
+        <h4 class="text-sm font-medium text-gray-300 mb-3">New Character</h4>
+        <div class="grid gap-3">
+          <div>
+            <%= form.label :name, "Name", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_field :name, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600", required: true %>
+          </div>
+          <div>
+            <%= form.label :role, "Role", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_field :role, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+          </div>
+          <div>
+            <%= form.label :description, "Description", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_area :description, rows: 3, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button type="button" data-action="click->edit-toggle#toggleAdd" data-form-id="new-character-form" class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">Cancel</button>
+            <button type="submit" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors">Create</button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @universe.characters.any? %>
       <div class="grid gap-4">
         <% @universe.characters.each do |character| %>
-          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
-            <h3 class="font-medium text-gray-900 mb-2"><%= character.name %></h3>
-            <p class="text-sm text-gray-400"><%= character.description %></p>
+          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600" id="character-<%= character.id %>">
+            <!-- View Mode -->
+            <div id="character-view-<%= character.id %>">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <h3 class="font-medium text-gray-100 mb-1"><%= character.name %></h3>
+                  <% if character.role.present? %>
+                    <span class="inline-block px-2 py-0.5 bg-purple-900/50 text-purple-300 text-xs rounded mb-2"><%= character.role %></span>
+                  <% end %>
+                  <p class="text-sm text-gray-400"><%= character.description %></p>
+                </div>
+                <div class="flex gap-1 ml-3">
+                  <button type="button" data-action="click->edit-toggle#toggleEdit" data-type="character" data-id="<%= character.id %>" class="edit-toggle-btn p-1.5 text-gray-400 hover:text-purple-400 hover:bg-gray-700 rounded transition-colors" title="Edit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <%= button_to universe_character_path(@universe, character), method: :delete, data: { turbo_confirm: "Delete this character?" }, class: "p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors", title: "Delete" do %>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Mode (hidden by default) -->
+            <div id="character-edit-<%= character.id %>" class="hidden">
+              <%= form_with url: universe_character_path(@universe, character), method: :patch, scope: :character, data: { turbo: false } do |form| %>
+                <div class="grid gap-3">
+                  <div>
+                    <%= form.label :name, "Name", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_field :name, value: character.name, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600", required: true %>
+                  </div>
+                  <div>
+                    <%= form.label :role, "Role", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_field :role, value: character.role, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+                  </div>
+                  <div>
+                    <%= form.label :description, "Description", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_area :description, value: character.description, rows: 3, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+                  </div>
+                  <div class="flex gap-2 justify-end">
+                    <button type="button" data-action="click->edit-toggle#toggleEdit" data-type="character" data-id="<%= character.id %>" class="edit-toggle-btn px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors">Save</button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
           </div>
         <% end %>
       </div>
-    </div>
-  <% end %>
+    <% else %>
+      <p class="text-gray-400 text-center py-4">No characters yet. Add your first character!</p>
+    <% end %>
+  </div>
 
   <!-- Locations Section -->
-  <% if @universe.locations.any? %>
-    <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
         <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
         </svg>
         Locations
       </h2>
+      <button type="button" data-action="click->edit-toggle#toggleAdd" data-form-id="new-location-form" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add
+      </button>
+    </div>
+
+    <!-- New Location Form (hidden by default) -->
+    <div id="new-location-form" class="hidden mb-4">
+      <%= form_with url: universe_locations_path(@universe), method: :post, scope: :location, data: { turbo: false }, class: "bg-[#1a1a1a] rounded-lg p-4 border border-blue-600" do |form| %>
+        <h4 class="text-sm font-medium text-gray-300 mb-3">New Location</h4>
+        <div class="grid gap-3">
+          <div>
+            <%= form.label :name, "Name", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_field :name, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600", required: true %>
+          </div>
+          <div>
+            <%= form.label :location_type, "Type", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_field :location_type, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" %>
+          </div>
+          <div>
+            <%= form.label :description, "Description", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_area :description, rows: 3, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" %>
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button type="button" data-action="click->edit-toggle#toggleAdd" data-form-id="new-location-form" class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">Cancel</button>
+            <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">Create</button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @universe.locations.any? %>
       <div class="grid gap-4">
         <% @universe.locations.each do |location| %>
-          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
-            <h3 class="font-medium text-gray-900 mb-2"><%= location.name %></h3>
-            <p class="text-sm text-gray-400"><%= location.description %></p>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <!-- Chapters Section -->
-  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
-        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-        </svg>
-        Story Structure
-      </h2>
-    </div>
-
-    <% if @universe.chapters.any? %>
-      <div class="space-y-4">
-        <% @universe.chapters.each do |chapter| %>
-          <div class="border-l-2 border-green-600 pl-4">
-            <h5 class="font-semibold text-gray-900 mb-2"><%= chapter.name %></h5>
-            <% if chapter.description.present? %>
-              <p class="text-sm text-gray-400 mb-3"><%= chapter.description %></p>
-            <% end %>
-
-            <% chapter.scenes.each do |scene| %>
-              <div class="ml-4 mb-3">
-                <p class="text-sm font-medium text-purple-400 mb-2"><%= scene.name %></p>
-
-                <% if scene.description.present? %>
-                  <p class="text-sm text-gray-300 mt-2 mb-3 leading-relaxed"><%= scene.description %></p>
-                <% end %>
-
-                <% if scene.beats.any? %>
-                  <% scene.beats.each_with_index do |beat, beat_index| %>
-                    <div class="flex gap-2 mb-2 ml-4">
-                      <div class="flex-shrink-0">
-                        <div class="w-6 h-6 bg-green-900/50 rounded-full flex items-center justify-center border border-green-700">
-                          <span class="text-xs font-semibold text-green-400"><%= beat_index + 1 %></span>
-                        </div>
-                      </div>
-                      <div class="flex-1">
-                        <p class="text-sm font-medium text-white"><%= beat.title %></p>
-                        <p class="text-xs text-gray-400 mt-1"><%= beat.description&.truncate(200) %></p>
-                      </div>
-                    </div>
+          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600" id="location-<%= location.id %>">
+            <!-- View Mode -->
+            <div id="location-view-<%= location.id %>">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <h3 class="font-medium text-gray-100 mb-1"><%= location.name %></h3>
+                  <% if location.location_type.present? %>
+                    <span class="inline-block px-2 py-0.5 bg-blue-900/50 text-blue-300 text-xs rounded mb-2"><%= location.location_type %></span>
                   <% end %>
-                <% end %>
+                  <p class="text-sm text-gray-400"><%= location.description %></p>
+                </div>
+                <div class="flex gap-1 ml-3">
+                  <button type="button" data-action="click->edit-toggle#toggleEdit" data-type="location" data-id="<%= location.id %>" class="edit-toggle-btn p-1.5 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded transition-colors" title="Edit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <%= button_to universe_location_path(@universe, location), method: :delete, data: { turbo_confirm: "Delete this location?" }, class: "p-1.5 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors", title: "Delete" do %>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  <% end %>
+                </div>
               </div>
-            <% end %>
+            </div>
+
+            <!-- Edit Mode (hidden by default) -->
+            <div id="location-edit-<%= location.id %>" class="hidden">
+              <%= form_with url: universe_location_path(@universe, location), method: :patch, scope: :location, data: { turbo: false } do |form| %>
+                <div class="grid gap-3">
+                  <div>
+                    <%= form.label :name, "Name", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_field :name, value: location.name, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600", required: true %>
+                  </div>
+                  <div>
+                    <%= form.label :location_type, "Type", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_field :location_type, value: location.location_type, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" %>
+                  </div>
+                  <div>
+                    <%= form.label :description, "Description", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_area :description, value: location.description, rows: 3, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" %>
+                  </div>
+                  <div class="flex gap-2 justify-end">
+                    <button type="button" data-action="click->edit-toggle#toggleEdit" data-type="location" data-id="<%= location.id %>" class="edit-toggle-btn px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">Save</button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
           </div>
         <% end %>
       </div>
     <% else %>
-      <p class="text-gray-300 text-center py-8">No chapters yet. Add your first chapter to get started!</p>
+      <p class="text-gray-400 text-center py-4">No locations yet. Add your first location!</p>
+    <% end %>
+  </div>
+
+  <!-- Beats Section -->
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        Story Beats
+      </h2>
+      <button type="button" data-action="click->edit-toggle#toggleAdd" data-form-id="new-beat-form" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Beat
+      </button>
+    </div>
+
+    <!-- New Beat Form (hidden by default) -->
+    <div id="new-beat-form" class="hidden mb-4">
+      <%= form_with url: universe_beats_path(@universe), method: :post, scope: :beat, data: { turbo: false }, class: "bg-[#1a1a1a] rounded-lg p-4 border border-green-600" do |form| %>
+        <h4 class="text-sm font-medium text-gray-300 mb-3">New Beat</h4>
+        <div class="grid gap-3">
+          <div>
+            <%= form.label :title, "Title", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_field :title, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600", required: true %>
+          </div>
+          <div>
+            <%= form.label :description, "Description", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.text_area :description, rows: 3, class: "w-full px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600" %>
+          </div>
+          <div>
+            <%= form.label :order_index, "Order", class: "block text-xs font-medium text-gray-400 mb-1" %>
+            <%= form.number_field :order_index, value: @universe.beats.count + 1, class: "w-24 px-3 py-2 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600" %>
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button type="button" data-action="click->edit-toggle#toggleAdd" data-form-id="new-beat-form" class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">Cancel</button>
+            <button type="submit" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">Create</button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @universe.beats.any? %>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <% @universe.beats.order(:order_index, :created_at).each_with_index do |beat, index| %>
+          <div class="bg-[#252525] rounded-lg p-4 border border-gray-600" id="beat-<%= beat.id %>">
+            <!-- View Mode -->
+            <div id="beat-view-<%= beat.id %>">
+              <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                  <div class="w-8 h-8 bg-green-900/50 rounded-full flex items-center justify-center border border-green-700">
+                    <span class="text-sm font-semibold text-green-400"><%= index + 1 %></span>
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between">
+                    <h4 class="font-medium text-gray-100 mb-1 truncate"><%= beat.title %></h4>
+                    <div class="flex gap-1 ml-2 flex-shrink-0">
+                      <button type="button" data-action="click->edit-toggle#toggleEdit" data-type="beat" data-id="<%= beat.id %>" class="edit-toggle-btn p-1 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded transition-colors" title="Edit">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                      <%= button_to universe_beat_path(@universe, beat), method: :delete, data: { turbo_confirm: "Delete this beat?" }, class: "p-1 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors", title: "Delete" do %>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      <% end %>
+                    </div>
+                  </div>
+                  <p class="text-sm text-gray-400 line-clamp-3"><%= beat.description %></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Mode (hidden by default) -->
+            <div id="beat-edit-<%= beat.id %>" class="hidden">
+              <%= form_with url: universe_beat_path(@universe, beat), method: :patch, scope: :beat, data: { turbo: false } do |form| %>
+                <div class="grid gap-3">
+                  <div>
+                    <%= form.label :title, "Title", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_field :title, value: beat.title, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600", required: true %>
+                  </div>
+                  <div>
+                    <%= form.label :description, "Description", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.text_area :description, value: beat.description, rows: 3, class: "w-full px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600" %>
+                  </div>
+                  <div>
+                    <%= form.label :order_index, "Order", class: "block text-xs font-medium text-gray-400 mb-1" %>
+                    <%= form.number_field :order_index, value: beat.order_index, class: "w-24 px-3 py-2 border border-gray-600 bg-[#1a1a1a] text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-600" %>
+                  </div>
+                  <div class="flex gap-2 justify-end">
+                    <button type="button" data-action="click->edit-toggle#toggleEdit" data-type="beat" data-id="<%= beat.id %>" class="edit-toggle-btn px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">Save</button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-gray-400 text-center py-4">No beats yet. Add your first story beat!</p>
     <% end %>
   </div>
 </div>

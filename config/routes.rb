@@ -19,12 +19,8 @@ Rails.application.routes.draw do
       post :regenerate
     end
 
-    resources :chapters do
-      resources :scenes do
-        resources :beats
-      end
-    end
-
+    resources :chapters
+    resources :beats
     resources :characters
     resources :locations
     resources :universe_shares, only: [:create, :update, :destroy]

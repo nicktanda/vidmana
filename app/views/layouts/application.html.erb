@@ -194,7 +194,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="flex-1 h-full flex flex-col" style="background-color: var(--bg-primary);">
+        <div class="flex-1 min-h-0 flex flex-col" style="background-color: var(--bg-primary);">
           <!-- Notifications -->
           <% if notice.present? %>
             <div class="flex-shrink-0 bg-green-900/50 border-b border-green-800 text-green-200 px-6 py-3">
@@ -208,7 +208,7 @@
           <% end %>
 
           <!-- Scrollable Content - takes remaining height -->
-          <main class="flex-1 flex flex-col">
+          <main class="flex-1 min-h-0 flex flex-col">
             <%= yield %>
           </main>
         </div>
