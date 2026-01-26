@@ -32,7 +32,7 @@ class LocationsController < ApplicationController
     if @location.update(location_params)
       redirect_to edit_universe_path(@universe), notice: 'Location was successfully updated.'
     else
-      render :edit
+      redirect_to edit_universe_path(@universe), alert: 'Failed to update location.'
     end
   end
 

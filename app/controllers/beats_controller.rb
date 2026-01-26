@@ -32,7 +32,7 @@ class BeatsController < ApplicationController
     if @beat.update(beat_params)
       redirect_to edit_universe_path(@universe), notice: 'Beat was successfully updated.'
     else
-      render :edit
+      redirect_to edit_universe_path(@universe), alert: 'Failed to update beat.'
     end
   end
 

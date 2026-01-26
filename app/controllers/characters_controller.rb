@@ -32,7 +32,7 @@ class CharactersController < ApplicationController
     if @character.update(character_params)
       redirect_to edit_universe_path(@universe), notice: 'Character was successfully updated.'
     else
-      render :edit
+      redirect_to edit_universe_path(@universe), alert: 'Failed to update character.'
     end
   end
 
