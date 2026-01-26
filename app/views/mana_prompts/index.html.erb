@@ -1,8 +1,47 @@
-<div class="max-w-5xl mx-auto px-6 py-8">
+<style>
+  .item-display { display: block; }
+  .item-form { display: none; }
+  .editing .item-display { display: none; }
+  .editing .item-form { display: block; }
+</style>
+
+<script>
+  (function() {
+    function initToggle() {
+      const page = document.querySelector('.mana-prompts-page');
+      if (!page || page.dataset.initialized) return;
+      page.dataset.initialized = 'true';
+
+      page.addEventListener('click', function(e) {
+        const editBtn = e.target.closest('[data-action="edit"]');
+        const cancelBtn = e.target.closest('[data-action="cancel"]');
+
+        if (editBtn) {
+          e.preventDefault();
+          const item = editBtn.closest('[data-editable]');
+          if (item) item.classList.add('editing');
+        }
+
+        if (cancelBtn) {
+          e.preventDefault();
+          const item = cancelBtn.closest('[data-editable]');
+          if (item) item.classList.remove('editing');
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initToggle);
+    document.addEventListener('turbo:load', initToggle);
+    document.addEventListener('turbo:render', initToggle);
+    initToggle();
+  })();
+</script>
+
+<div class="px-6 py-8 mana-prompts-page">
   <!-- Header -->
   <div class="mb-8">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-3xl font-bold text-gray-900">ManaPrompt</h1>
+      <h1 class="text-3xl font-bold text-gray-900">ManaPrompts</h1>
       <div class="flex gap-2">
         <%= link_to authenticated_root_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors flex items-center" do %>
           <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -10,22 +49,97 @@
           </svg>
           Back to Home
         <% end %>
-        <%= link_to edit_mana_prompts_path, class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center" do %>
-          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-          Edit Prompt
-        <% end %>
       </div>
     </div>
-    <p class="text-gray-400">This is the AI prompt template used to generate all your universes</p>
+    <p class="text-gray-400">Manage your AI prompt templates. Each universe can use a different prompt.</p>
   </div>
 
-  <!-- Current Prompt -->
-  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Current Prompt Template</h2>
-    <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
-      <pre class="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed"><%= @mana_prompt.content %></pre>
+  <!-- Add New Prompt -->
+  <div class="mb-6" data-editable>
+    <div class="item-display">
+      <button type="button" data-action="edit" class="w-full px-4 py-3 border-2 border-dashed border-purple-600 text-purple-400 rounded-lg hover:bg-purple-600/10 transition-colors flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Add New Prompt
+      </button>
     </div>
+    <div class="item-form">
+      <%= form_with model: ManaPrompt.new, url: mana_prompts_path, method: :post, local: true, class: "bg-[#2f2f2f] rounded-lg p-6 border border-purple-600" do |form| %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <%= form.label :name, "Prompt Name", class: "block text-sm font-medium text-gray-300 mb-2" %>
+            <%= form.text_field :name, placeholder: "e.g. Action Movie Style", class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600", required: true %>
+          </div>
+          <div>
+            <%= form.label :model, "AI Model", class: "block text-sm font-medium text-gray-300 mb-2" %>
+            <%= form.select :model, options_for_select(ManaPrompt::AVAILABLE_MODELS, 'x-ai/grok-4-fast'), {}, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+          </div>
+        </div>
+        <div class="mb-4">
+          <%= form.label :content, "Template Content", class: "block text-sm font-medium text-gray-300 mb-2" %>
+          <%= form.text_area :content, value: ManaPrompt::DEFAULT_PROMPT, rows: 15, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 font-mono text-sm" %>
+          <p class="text-xs text-gray-400 mt-1">Use <code class="bg-gray-700 px-2 py-1 rounded">{USER_PROMPT}</code> where you want the user's input inserted.</p>
+        </div>
+        <div class="flex gap-3">
+          <%= form.submit "Create Prompt", class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer" %>
+          <button type="button" data-action="cancel" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors">Cancel</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Existing Prompts -->
+  <div class="space-y-4">
+    <% @mana_prompts.each do |mana_prompt| %>
+      <div class="bg-[#2f2f2f] rounded-lg p-4 border border-gray-600" data-editable>
+        <!-- Display View -->
+        <div class="item-display">
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="font-medium text-gray-100 text-lg"><%= mana_prompt.name %></span>
+                <span class="text-xs px-2 py-1 bg-blue-600/30 text-blue-300 rounded"><%= mana_prompt.model_display_name %></span>
+                <span class="text-xs px-2 py-1 bg-purple-600/30 text-purple-300 rounded"><%= mana_prompt.universes.count %> universes</span>
+              </div>
+              <p class="text-sm text-gray-400 line-clamp-2"><%= truncate(mana_prompt.content, length: 150) %></p>
+            </div>
+            <button type="button" data-action="edit" class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded-lg transition-colors ml-4">Edit</button>
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="item-form">
+          <%= form_with model: mana_prompt, url: mana_prompt_path(mana_prompt), method: :patch, local: true do |form| %>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <%= form.label :name, "Prompt Name", class: "block text-sm font-medium text-gray-300 mb-2" %>
+                <%= form.text_field :name, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600", required: true %>
+              </div>
+              <div>
+                <%= form.label :model, "AI Model", class: "block text-sm font-medium text-gray-300 mb-2" %>
+                <%= form.select :model, options_for_select(ManaPrompt::AVAILABLE_MODELS, mana_prompt.model), {}, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+              </div>
+            </div>
+            <div class="mb-4">
+              <%= form.label :content, "Template Content", class: "block text-sm font-medium text-gray-300 mb-2" %>
+              <%= form.text_area :content, rows: 15, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600 font-mono text-sm" %>
+              <p class="text-xs text-gray-400 mt-1">Use <code class="bg-gray-700 px-2 py-1 rounded">{USER_PROMPT}</code> where you want the user's input inserted.</p>
+            </div>
+            <div class="flex gap-3 justify-between">
+              <div class="flex gap-3">
+                <%= form.submit "Save Changes", class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer" %>
+                <button type="button" data-action="cancel" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors">Cancel</button>
+              </div>
+              <% if @mana_prompts.count > 1 %>
+                <%= button_to mana_prompt_path(mana_prompt), method: :delete, form: { data: { turbo_confirm: "Delete this prompt? Any universes using it will switch to no prompt." } }, class: "px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors" do %>
+                  Delete
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>

@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="mb-8">
     <div class="flex items-center justify-between mb-4">
-      <h1 class="text-3xl font-bold text-gray-900">Edit Prompt</h1>
+      <h1 class="text-3xl font-bold text-gray-900">New Prompt</h1>
       <div class="flex gap-2">
         <%= link_to mana_prompts_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors flex items-center" do %>
           <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12,20 +12,20 @@
         <% end %>
       </div>
     </div>
-    <p class="text-gray-400">Edit the AI prompt template. Use <code class="bg-gray-700 px-2 py-1 rounded text-xs">{USER_PROMPT}</code> as a placeholder for where the user's prompt will be inserted.</p>
+    <p class="text-gray-400">Create a new AI prompt template. Use <code class="bg-gray-700 px-2 py-1 rounded text-xs">{USER_PROMPT}</code> as a placeholder for where the user's prompt will be inserted.</p>
   </div>
 
-  <!-- Edit Form -->
+  <!-- New Form -->
   <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
-    <%= form_with model: @mana_prompt, url: mana_prompt_path(@mana_prompt), method: :patch, local: true do |form| %>
+    <%= form_with model: @mana_prompt, url: mana_prompts_path, method: :post, local: true do |form| %>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <%= form.label :name, "Prompt Name", class: "block text-sm font-medium text-gray-300 mb-2" %>
-          <%= form.text_field :name, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600", required: true %>
+          <%= form.text_field :name, placeholder: "e.g. Action Movie Style", class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600", required: true %>
         </div>
         <div>
           <%= form.label :model, "AI Model", class: "block text-sm font-medium text-gray-300 mb-2" %>
-          <%= form.select :model, options_for_select(ManaPrompt::AVAILABLE_MODELS, @mana_prompt.model), {}, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600" %>
+          <%= form.select :model, options_for_select(ManaPrompt::AVAILABLE_MODELS, 'x-ai/grok-4-fast'), {}, class: "w-full px-4 py-3 border border-gray-600 bg-[#252525] text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600" %>
         </div>
       </div>
       <div class="mb-4">
@@ -35,7 +35,7 @@
       </div>
 
       <div class="flex gap-3">
-        <%= form.submit "Save Changes", class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer" %>
+        <%= form.submit "Create Prompt", class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors cursor-pointer" %>
         <%= link_to "Cancel", mana_prompts_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors" %>
       </div>
     <% end %>

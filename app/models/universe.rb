@@ -1,5 +1,6 @@
 class Universe < ApplicationRecord
   belongs_to :user
+  belongs_to :mana_prompt, optional: true
   has_many :chapters, dependent: :destroy
   has_many :beats, dependent: :destroy
   has_many :characters, dependent: :destroy

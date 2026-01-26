@@ -13,22 +13,35 @@
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelector('.edit-page-styles').addEventListener('click', function(e) {
-      const editBtn = e.target.closest('[data-action="edit"]');
-      const cancelBtn = e.target.closest('[data-action="cancel"]');
+  (function() {
+    function initToggle() {
+      const page = document.querySelector('.edit-page-styles');
+      if (!page || page.dataset.initialized) return;
+      page.dataset.initialized = 'true';
 
-      if (editBtn) {
-        const item = editBtn.closest('[data-editable]');
-        if (item) item.classList.add('editing');
-      }
+      page.addEventListener('click', function(e) {
+        const editBtn = e.target.closest('[data-action="edit"]');
+        const cancelBtn = e.target.closest('[data-action="cancel"]');
 
-      if (cancelBtn) {
-        const item = cancelBtn.closest('[data-editable]');
-        if (item) item.classList.remove('editing');
-      }
-    });
-  });
+        if (editBtn) {
+          e.preventDefault();
+          const item = editBtn.closest('[data-editable]');
+          if (item) item.classList.add('editing');
+        }
+
+        if (cancelBtn) {
+          e.preventDefault();
+          const item = cancelBtn.closest('[data-editable]');
+          if (item) item.classList.remove('editing');
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initToggle);
+    document.addEventListener('turbo:load', initToggle);
+    document.addEventListener('turbo:render', initToggle);
+    initToggle();
+  })();
 </script>
 
 <div class="max-w-7xl mx-auto px-6 py-8 edit-page-styles">
@@ -81,17 +94,26 @@
         <p class="text-xs text-gray-400 mt-1">Edit this prompt to regenerate the universe with new content.</p>
       </div>
 
-      <div class="mb-4">
-        <%= form.label :model, "AI Model", class: "block text-sm font-medium text-gray-300 mb-2" %>
-        <%= form.select :model,
-            options_for_select([
-              ['Grok 4 Fast', 'x-ai/grok-4-fast'],
-              ['Grok 3 Mini', 'x-ai/grok-3-mini'],
-              ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
-              ['Qwen 3 Coder', 'qwen/qwen3-coder']
-            ], @selected_model || 'x-ai/grok-4-fast'),
-            {},
-            class: 'px-3 py-2 border border-gray-600 rounded-lg bg-[#252525] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <%= form.label :model, "AI Model", class: "block text-sm font-medium text-gray-300 mb-2" %>
+          <%= form.select :model,
+              options_for_select([
+                ['Grok 4 Fast', 'x-ai/grok-4-fast'],
+                ['Grok 3 Mini', 'x-ai/grok-3-mini'],
+                ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
+                ['Qwen 3 Coder', 'qwen/qwen3-coder']
+              ], @selected_model || 'x-ai/grok-4-fast'),
+              {},
+              class: 'w-full px-3 py-2 border border-gray-600 rounded-lg bg-[#252525] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
+        </div>
+        <div>
+          <%= form.label :mana_prompt_id, "Prompt Template", class: "block text-sm font-medium text-gray-300 mb-2" %>
+          <%= form.select :mana_prompt_id,
+              options_for_select(@mana_prompts.map { |mp| ["#{mp.name} (#{mp.model_display_name})", mp.id] }, @universe.mana_prompt_id || @mana_prompts.first&.id),
+              {},
+              class: 'w-full px-3 py-2 border border-gray-600 rounded-lg bg-[#252525] text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-purple-600' %>
+        </div>
       </div>
 
       <div class="flex gap-3">

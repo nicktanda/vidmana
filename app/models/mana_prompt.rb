@@ -1,7 +1,21 @@
 class ManaPrompt < ApplicationRecord
+  AVAILABLE_MODELS = [
+    ['Grok 4 Fast', 'x-ai/grok-4-fast'],
+    ['Grok 3 Mini', 'x-ai/grok-3-mini'],
+    ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
+    ['Qwen 3 Coder', 'qwen/qwen3-coder']
+  ].freeze
+
   belongs_to :user
+  has_many :universes, dependent: :nullify
 
   validates :content, presence: true
+  validates :name, presence: true
+  validates :model, presence: true, inclusion: { in: AVAILABLE_MODELS.map(&:last) }
+
+  def model_display_name
+    AVAILABLE_MODELS.find { |name, value| value == model }&.first || model
+  end
 
   DEFAULT_PROMPT = <<~PROMPT.freeze
     {USER_PROMPT}

@@ -25,19 +25,30 @@
       </button>
     </div>
 
-    <!-- Model selector and generate button -->
-    <div class="flex items-center justify-between px-1" style="margin-top: 0.75rem;">
-      <%= form.select :model,
-          options_for_select([
-            ['Grok 4', 'x-ai/grok-4-fast'],
-            ['Grok 3', 'x-ai/grok-3-mini'],
-            ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
-            ['Qwen 3', 'qwen/qwen3-coder']
-          ], @selected_model || @default_model),
-          {},
-          id: 'model-select',
-          class: 'px-3 py-2 text-sm border-0 rounded-lg text-themed-secondary focus:outline-none focus:ring-1 focus:ring-gray-500 cursor-pointer',
-          style: 'background-color: var(--bg-hover);' %>
+    <!-- Model selector, Prompt selector and generate button -->
+    <div class="flex items-center justify-between px-1 gap-2" style="margin-top: 0.75rem;">
+      <div class="flex items-center gap-2">
+        <%= form.select :model,
+            options_for_select([
+              ['Grok 4', 'x-ai/grok-4-fast'],
+              ['Grok 3', 'x-ai/grok-3-mini'],
+              ['Qwen 2.5', 'qwen/qwen-2.5-72b-instruct'],
+              ['Qwen 3', 'qwen/qwen3-coder']
+            ], @selected_model || @default_model),
+            {},
+            id: 'model-select',
+            class: 'px-3 py-2 text-sm border-0 rounded-lg text-themed-secondary focus:outline-none focus:ring-1 focus:ring-gray-500 cursor-pointer',
+            style: 'background-color: var(--bg-hover);' %>
+
+        <% if @mana_prompts.present? %>
+          <%= form.select :mana_prompt_id,
+              options_for_select(@mana_prompts.map { |mp| ["#{mp.name} (#{mp.model_display_name})", mp.id] }, @mana_prompts.first&.id),
+              {},
+              id: 'mana-prompt-select',
+              class: 'px-3 py-2 text-sm border-0 rounded-lg text-themed-secondary focus:outline-none focus:ring-1 focus:ring-gray-500 cursor-pointer',
+              style: 'background-color: var(--bg-hover);' %>
+        <% end %>
+      </div>
 
       <button
         type="submit"

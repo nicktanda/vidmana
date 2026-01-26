@@ -1,7 +1,5 @@
 Rails.application.routes.draw do
-  get "mana_prompts", to: "mana_prompts#index", as: :mana_prompts
-  get "mana_prompts/edit", to: "mana_prompts#edit", as: :edit_mana_prompts
-  patch "mana_prompts", to: "mana_prompts#update"
+  resources :mana_prompts
 
   devise_for :users,
     skip: [:registrations, :passwords, :sessions],

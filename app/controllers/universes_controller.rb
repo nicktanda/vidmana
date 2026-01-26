@@ -31,6 +31,7 @@ class UniversesController < ApplicationController
 
     @model_options = MODEL_OPTIONS
     @default_model = DEFAULT_MODEL
+    @mana_prompts = current_user.mana_prompts.order(:name)
     @universe = current_user.universes.build
   end
 
@@ -47,6 +48,7 @@ class UniversesController < ApplicationController
     @model_options = MODEL_OPTIONS
     @default_model = DEFAULT_MODEL
     @selected_model = sanitized_model_choice(params.dig(:universe, :model))
+    @mana_prompts = current_user.mana_prompts.order(:name)
   end
 
   def create
@@ -125,6 +127,7 @@ class UniversesController < ApplicationController
     # Otherwise, we're generating a new universe from a prompt
     user_prompt = params.dig(:universe, :prompt)
     selected_model = sanitized_model_choice(params.dig(:universe, :model))
+    selected_mana_prompt_id = params.dig(:universe, :mana_prompt_id)
     @selected_model = selected_model
 
     unless user_prompt.present?
@@ -132,9 +135,15 @@ class UniversesController < ApplicationController
       return
     end
 
+    # Get the selected mana_prompt or fall back to default
+    mana_prompt = if selected_mana_prompt_id.present?
+      current_user.mana_prompts.find_by(id: selected_mana_prompt_id)
+    end
+    mana_prompt ||= current_user.default_mana_prompt
+
     begin
       # Call OpenRouter API to generate story content
-      api_response = call_openrouter_api(user_prompt, selected_model)
+      api_response = call_openrouter_api(user_prompt, selected_model, mana_prompt)
 
       # Store prompt in api_response so it gets saved later
       api_response['prompt'] = user_prompt
@@ -154,6 +163,7 @@ class UniversesController < ApplicationController
   def edit
     @model_options = MODEL_OPTIONS
     @selected_model = DEFAULT_MODEL
+    @mana_prompts = current_user.mana_prompts.order(:name)
   end
 
   def update
@@ -180,8 +190,18 @@ class UniversesController < ApplicationController
         prompt: params[:prompt].present? ? params[:prompt] : @universe.prompt
       )
 
+      # Get the selected mana_prompt, universe's mana_prompt, or fall back to default
+      selected_mana_prompt_id = params[:mana_prompt_id]
+      mana_prompt = if selected_mana_prompt_id.present?
+        current_user.mana_prompts.find_by(id: selected_mana_prompt_id)
+      end
+      mana_prompt ||= @universe.mana_prompt || current_user.default_mana_prompt
+
+      # Update universe's mana_prompt association if a new one was selected
+      @universe.update(mana_prompt_id: mana_prompt.id) if mana_prompt
+
       # Call OpenRouter API with the prompt
-      api_response = call_openrouter_api(user_prompt, selected_model)
+      api_response = call_openrouter_api(user_prompt, selected_model, mana_prompt)
 
       # Update the universe with the regenerated content
       if api_response['characters'] && api_response['locations'] && api_response['chapters']
@@ -291,12 +311,13 @@ class UniversesController < ApplicationController
     params.require(:universe).permit(:name, :prompt)
   end
 
-  def call_openrouter_api(user_prompt, model_choice)
+  def call_openrouter_api(user_prompt, model_choice, mana_prompt)
     Rails.logger.info "🚀 Calling OpenRouter API with user prompt: #{user_prompt}"
     Rails.logger.info "🤖 Using model: #{model_choice}"
+    Rails.logger.info "📝 Using ManaPrompt: #{mana_prompt.name}"
 
-    # Get the user's ManaPrompt template and replace {USER_PROMPT} with the actual prompt
-    mana_prompt_template = current_user.mana_prompt.content
+    # Get the ManaPrompt template and replace {USER_PROMPT} with the actual prompt
+    mana_prompt_template = mana_prompt.content
     expanded_prompt = mana_prompt_template.gsub('{USER_PROMPT}', user_prompt)
 
     response = HTTParty.post(

@@ -1,0 +1,34 @@
+<div class="px-6 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl font-bold text-gray-900"><%= @mana_prompt.name %></h1>
+      <div class="flex gap-2">
+        <%= link_to mana_prompts_path, class: "px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors flex items-center" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Back to Prompts
+        <% end %>
+        <%= link_to edit_mana_prompt_path(@mana_prompt), class: "px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center" do %>
+          <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          Edit
+        <% end %>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs px-2 py-1 bg-blue-600/30 text-blue-300 rounded"><%= @mana_prompt.model_display_name %></span>
+      <span class="text-xs px-2 py-1 bg-purple-600/30 text-purple-300 rounded"><%= @mana_prompt.universes.count %> universes using this prompt</span>
+    </div>
+  </div>
+
+  <!-- Prompt Content -->
+  <div class="bg-[#2f2f2f] rounded-lg p-6 border border-gray-600">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Template Content</h2>
+    <div class="bg-[#252525] rounded-lg p-4 border border-gray-600">
+      <pre class="text-gray-300 whitespace-pre-wrap font-mono text-sm leading-relaxed"><%= @mana_prompt.content %></pre>
+    </div>
+  </div>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_21_104419) do
+ActiveRecord::Schema[8.0].define(version: 2026_01_26_012316) do
   create_table "beats", force: :cascade do |t|
     t.string "title", null: false
     t.text "description", null: false
@@ -57,7 +57,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_104419) do
     t.text "content", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_mana_prompts_on_user_id", unique: true
+    t.string "name", default: "Default Prompt", null: false
+    t.string "model", default: "x-ai/grok-4-fast", null: false
+    t.index ["user_id"], name: "index_mana_prompts_on_user_id"
   end
 
   create_table "scenes", force: :cascade do |t|
@@ -105,6 +107,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_104419) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "prompt"
+    t.integer "mana_prompt_id"
+    t.index ["mana_prompt_id"], name: "index_universes_on_mana_prompt_id"
     t.index ["user_id"], name: "index_universes_on_user_id"
   end
 
@@ -134,5 +138,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_21_104419) do
   add_foreign_key "stories", "users"
   add_foreign_key "universe_shares", "universes"
   add_foreign_key "universe_shares", "users"
+  add_foreign_key "universes", "mana_prompts"
   add_foreign_key "universes", "users"
 end
